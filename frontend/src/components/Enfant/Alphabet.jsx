@@ -1,75 +1,82 @@
+// src/components/Enfant/Alphabet.jsx
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../services/api';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { mockLetters, mockCompletedAlphabetIds } from '../../mockData';
 
 export default function Alphabet() {
   const { childId } = useParams();
   const navigate = useNavigate();
   const [letters, setLetters] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [clickedLetters, setClickedLetters] = useState({});
+  const [completedIds, setCompletedIds] = useState({});
+  // attempts stocke le nombre de clics pour chaque lettre (id -> count)
+  const [attempts, setAttempts] = useState({});
 
   useEffect(() => {
-    const fetchLetters = async () => {
-      try {
-        const res = await api.get('/enfant/alphabet');
-        setLetters(res.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLetters();
+    setLetters(mockLetters);
+    setCompletedIds(mockCompletedAlphabetIds);
+    // Initialiser attempts pour les lettres déjà complétées (optionnel)
+    const initialAttempts = {};
+    Object.keys(mockCompletedAlphabetIds).forEach(id => {
+      initialAttempts[id] = 3; // déjà appris
+    });
+    setAttempts(initialAttempts);
   }, []);
 
-  const playSound = (soundUrl) => {
-    const audio = new Audio(soundUrl);
-    audio.play();
-  };
+  const playSound = () => alert('🔊 Son de la lettre (simulation)');
 
-  const saveProgress = async (letterId) => {
-    if (clickedLetters[letterId]) return; // already saved
-    setClickedLetters(prev => ({ ...prev, [letterId]: true }));
-    try {
-      await api.post('/enfant/progress', {
-        content_type: 'alphabet',
-        content_id: letterId,
-        completed: true,
-        score: 1
-      });
-    } catch (err) {
-      console.error(err);
+  const saveProgress = (letterId) => {
+    if (completedIds[letterId]) return;
+
+    // Incrémenter le compteur de tentatives
+    const newAttempts = { ...attempts };
+    newAttempts[letterId] = (newAttempts[letterId] || 0) + 1;
+    setAttempts(newAttempts);
+
+    // Si on atteint 3, marquer comme complété
+    if (newAttempts[letterId] >= 3) {
+      setCompletedIds(prev => ({ ...prev, [letterId]: true }));
+      alert('🎉 Félicitations ! Cette lettre est maintenant apprise.');
     }
   };
 
-  const handleLetterClick = (letter) => {
-    playSound(letter.sound_url);
+  const handleClick = (letter) => {
+    playSound();
     saveProgress(letter.id);
   };
 
-  if (loading) return <div className="text-center p-10">Loading alphabet...</div>;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-6">
-      <div className="container mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <button onClick={() => navigate(`/enfant/${childId}`)} className="bg-gray-600 text-white px-4 py-2 rounded">⬅ Back</button>
-          <h1 className="text-3xl font-bold text-white">Alphabet</h1>
-          <div></div>
+    <div className="min-h-screen bg-gradient-to-br from-[#FEFEFE] via-[#F0F8FF] to-[#E8F0F8] font-['Nunito',sans-serif] p-6">
+      <div className="relative container mx-auto max-w-5xl">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
+          <button onClick={() => navigate(`/enfant/${childId}`)} className="bg-white text-[#00639C] font-semibold px-5 py-2.5 rounded-full shadow-md border">← Accueil</button>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-[#00639C]">L'alphabet</h1>
+          <Link to={`/enfant/${childId}/numbers`} className="bg-gradient-to-r from-[#4DABF7] to-[#9C7AFF] text-white font-semibold px-5 py-2.5 rounded-full">Les Nombres →</Link>
         </div>
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-9 gap-4">
-          {letters.map((letter) => (
-            <button
-              key={letter.id}
-              onClick={() => handleLetterClick(letter)}
-              className="bg-white rounded-xl p-4 text-center shadow-lg hover:scale-105 transition transform"
-            >
-              <div className="text-5xl font-bold text-blue-700">{letter.letter_uppercase}</div>
-              <div className="text-sm text-gray-500 mt-2">{letter.example_word}</div>
-              {clickedLetters[letter.id] && <span className="text-green-500 text-xs">✓</span>}
-            </button>
-          ))}
+        <p className="text-center text-[#404751] text-lg mb-10">Touche une lettre pour entendre son son. Après 3 fois, tu l'auras apprise !</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
+          {letters.map(letter => {
+            const isCompleted = completedIds[letter.id];
+            const currentAttempts = attempts[letter.id] || 0;
+            return (
+              <button
+                key={letter.id}
+                onClick={() => handleClick(letter)}
+                className={`relative bg-white rounded-2xl p-4 text-center shadow-md hover:shadow-xl transition transform hover:scale-105 ${isCompleted ? 'border-l-4 border-l-[#DB980F]' : ''}`}
+              >
+                <div className="text-4xl md:text-5xl font-bold text-[#00639C] mb-1">
+                  {letter.letter_uppercase} {letter.letter_uppercase.toLowerCase()}
+                </div>
+                <div className="text-3xl mb-1">{letter.image}</div>
+                <div className="text-xs md:text-sm text-[#6B7280] capitalize">{letter.example_word}</div>
+                {!isCompleted && (
+                  <div className="text-xs text-[#DB980F] mt-1">{currentAttempts}/3</div>
+                )}
+                {isCompleted && (
+                  <span className="absolute top-2 right-2 text-[#DB980F] text-lg font-bold">✓</span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

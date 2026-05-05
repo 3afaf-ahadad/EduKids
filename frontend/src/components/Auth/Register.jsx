@@ -1,74 +1,156 @@
-import { useState } from 'react';
-import api from '../../services/api';
-import { Link, useNavigate } from 'react-router-dom';
+// src/components/Auth/Register.jsx
+import { useState } from "react";
+import api from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Register() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
-  const [error, setError] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
+    setSuccess("");
+
     if (password !== passwordConfirmation) {
-      setError('Passwords do not match');
+      setError("Les mots de passe ne correspondent pas");
       return;
     }
+    if (password.length < 8) {
+      setError("Le mot de passe doit contenir au moins 8 caractères");
+      return;
+    }
+
     try {
-      await api.post('/register', { name, email, password, password_confirmation: passwordConfirmation });
-      navigate('/login');
+      // 1. Inscription
+      await api.post("/register", {
+        name,
+        email,
+        password,
+        password_confirmation: passwordConfirmation,
+      });
+
+      // 2. Connexion automatique
+      await login(email, password);
+
+      // 3. Redirection vers le tableau de bord
+      navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      console.error("Erreur inscription/connexion :", err.response?.data);
+      const message =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.email?.[0] ||
+        "Inscription échouée. Vérifiez vos informations.";
+      setError(message);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-400 to-purple-500">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Parent Registration</h2>
-        {error && <div className="bg-red-100 text-red-700 p-2 rounded mb-4 text-center">{error}</div>}
-        <input
-          type="text"
-          placeholder="Full Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-green-400"
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-green-400"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password (min 8 characters)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-green-400"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Confirm Password"
-          value={passwordConfirmation}
-          onChange={(e) => setPasswordConfirmation(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded mb-6 focus:outline-none focus:ring-2 focus:ring-green-400"
-          required
-        />
-        <button type="submit" className="w-full bg-green-600 text-white p-3 rounded font-semibold hover:bg-green-700 transition">
-          Register
-        </button>
-        <p className="mt-4 text-center text-gray-600">
-          Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login</Link>
+    <div className="min-h-screen bg-gradient-to-br from-[#FEFEFE] to-[#E8F0F8] flex items-center justify-center p-4 font-['Quicksand','Comic_Neue',sans-serif]">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 md:p-8 transition-all duration-300">
+        {/* Icône utilisateur */}
+        <div className="flex justify-center mb-5">
+          <div className="bg-gradient-to-br from-[#CEE5FF] to-[#E8DDFF] rounded-full p-3 shadow-md">
+            <svg
+              className="w-8 h-8 text-[#00639C]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Titres */}
+        <h2 className="text-3xl font-extrabold text-center text-[#00639C] tracking-tight">
+          Inscription Parent
+        </h2>
+        <p className="text-center text-gray-500 mt-1 mb-6 text-base">
+          Rejoignez l'aventure EduKids !
         </p>
-      </form>
+
+        {/* Message d'erreur */}
+        {error && (
+          <div className="bg-[#FFDAD6] text-[#BA1A1A] p-3 rounded-full mb-5 text-sm border border-[#FFB8B0] shadow-inner">
+            ⚠️ {error}
+          </div>
+        )}
+
+        {/* Message de succès (optionnel, si besoin) */}
+        {success && (
+          <div className="bg-green-100 text-green-700 p-3 rounded-full mb-5 text-sm">
+            ✅ {success}
+          </div>
+        )}
+
+        {/* Formulaire */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            placeholder="Nom et Prénom"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-5 py-3 bg-[#F1F4FA] border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#4DABF7] focus:border-transparent transition placeholder:text-gray-400 text-gray-700"
+            required
+          />
+          <input
+            type="email"
+            placeholder="Adresse Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-5 py-3 bg-[#F1F4FA] border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#4DABF7] focus:border-transparent transition placeholder:text-gray-400 text-gray-700"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Mot de passe (min. 8 caractères)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-5 py-3 bg-[#F1F4FA] border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#4DABF7] focus:border-transparent transition placeholder:text-gray-400 text-gray-700"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Confirmer le mot de passe"
+            value={passwordConfirmation}
+            onChange={(e) => setPasswordConfirmation(e.target.value)}
+            className="w-full px-5 py-3 bg-[#F1F4FA] border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#4DABF7] focus:border-transparent transition placeholder:text-gray-400 text-gray-700"
+            required
+          />
+
+          {/* Bouton "Créer un compte" avec dégradé */}
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-[#4DABF7] via-[#6844C8] to-[#DB980F] text-white font-bold py-3 rounded-full shadow-lg flex items-center justify-center gap-2 transition-all duration-200 transform hover:scale-105 active:scale-95 text-lg hover:shadow-xl"
+          >
+            Créer un compte
+            <span className="text-xl transition-transform group-hover:translate-x-1">→</span>
+          </button>
+
+          <p className="text-center text-gray-500 pt-2">
+            Déjà inscrit ?{" "}
+            <Link
+              to="/login"
+              className="text-[#00639C] font-semibold hover:text-[#4DABF7] hover:underline transition"
+            >
+              Se connecter
+            </Link>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

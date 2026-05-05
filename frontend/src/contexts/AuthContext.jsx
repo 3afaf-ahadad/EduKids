@@ -19,9 +19,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const response = await api.post('/login', { email, password });
+    await api.post('/login', { email, password });
     await fetchUser();
-    return response.data;
   };
 
   const logout = async () => {
