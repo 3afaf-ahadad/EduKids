@@ -24,6 +24,17 @@ class User extends Authenticatable
         'password',
     ];
 
+
+    public function childrenProfiles()
+    {
+        return $this->hasMany(Child::class, 'parent_id');
+    }
+
+    public function childProfile()
+    {
+        return $this->hasOne(Child::class, 'user_id');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *
