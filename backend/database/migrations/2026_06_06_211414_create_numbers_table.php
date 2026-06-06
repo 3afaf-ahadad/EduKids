@@ -16,7 +16,6 @@ return new class extends Migration
             $table->integer('value')->unique();
             $table->string('word');
             $table->string('sound_url');
-            $table->string('image_url');
             $table->timestamps();
         });
     }

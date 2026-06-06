@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('letter_uppercase', 1);
             $table->string('letter_lowercase', 1);
             $table->string('sound_url');
-            $table->string('image_url');
             $table->string('example_word');
             $table->timestamps();
         });

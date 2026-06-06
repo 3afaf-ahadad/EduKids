@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('name');
             $table->string('hex_code', 7);
             $table->string('sound_url');
-            $table->string('image_url');
             $table->timestamps();
         });
     }
