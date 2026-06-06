@@ -13,15 +13,14 @@ return new class extends Migration
     {
         Schema::create('progress', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('child_id')->constrained('children')->onDelete('cascade');
+            $table->foreignId('child_id')->constrained('children')->cascadeOnDelete();
             $table->string('content_type');
-            $table->unsignedBigInteger('content_id');
-            $table->integer('consulted_count')->default(0);
-            $table->boolean('mastered')->default(false);
+            $table->integer('content_id');
+            $table->boolean('completed')->default(false);
+            $table->integer('attempts')->default(0);
             $table->timestamps();
         });
     }
-
     /**
      * Reverse the migrations.
      */
