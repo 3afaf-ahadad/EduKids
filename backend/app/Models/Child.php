@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Child extends Model
 {
-    protected $fillable = ['parent_id', 'user_id', 'name', 'age']; // Secure assignment array[cite: 1]
+    protected $fillable = ['parent_id', 'user_id', 'name', 'age'];
 
     public function parent()
     {
