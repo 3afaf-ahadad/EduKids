@@ -13,12 +13,12 @@ class Child extends Model
         return $this->belongsTo(User::class, 'parent_id');
     }
 
-    public function userAccount()
+    public function account()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function progressRecords()
+    public function progress()
     {
         return $this->hasMany(Progress::class);
     }

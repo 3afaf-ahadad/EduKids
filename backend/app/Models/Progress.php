@@ -12,8 +12,8 @@ class Progress extends Model
         'child_id',
         'content_type',
         'content_id',
-        'consulted_count',
-        'mastered'
+        'completed',
+        'attempts'
     ];
 
     public function child()
