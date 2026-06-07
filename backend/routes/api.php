@@ -2,7 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Parent\ChildController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+Route::middleware(['auth:sanctum', 'role:parent'])->group(function () {
+    Route::apiResource('children', ChildController::class)->only(['index', 'store', 'update', 'destroy']);
+});

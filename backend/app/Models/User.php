@@ -25,7 +25,7 @@ class User extends Authenticatable
     ];
 
 
-    public function childrenProfiles()
+    public function children()
     {
         return $this->hasMany(Child::class, 'parent_id');
     }
