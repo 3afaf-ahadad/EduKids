@@ -30,7 +30,7 @@ class User extends Authenticatable
         return $this->hasMany(Child::class, 'parent_id');
     }
 
-    public function childProfile()
+    public function child()
     {
         return $this->hasOne(Child::class, 'user_id');
     }
