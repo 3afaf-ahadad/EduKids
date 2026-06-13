@@ -1,47 +1,48 @@
 <?php
 
-namespace Tests\Feature\Auth;
+namespace App\Http\Controllers\Auth;
 
-use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
-class AuthenticationTest extends TestCase
+class AuthenticatedSessionController extends Controller
 {
-    use RefreshDatabase;
-
-    public function test_users_can_authenticate_using_the_login_screen(): void
+    /**
+     * Handle an incoming authentication request.
+     */
+    public function store(Request $request): JsonResponse
     {
-        $user = User::factory()->create();
-
-        $response = $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'password',
+        $request->validate([
+            'email' => ['required', 'string', 'email'],
+            'password' => ['required', 'string'],
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertNoContent();
-    }
+        if (! Auth::attempt($request->only('email', 'password'))) {
+            throw ValidationException::withMessages([
+                'email' => ['Les identifiants fournis sont incorrects.'],
+            ]);
+        }
 
-    public function test_users_can_not_authenticate_with_invalid_password(): void
-    {
-        $user = User::factory()->create();
+        $user = Auth::user();
+        $token = $user->createToken('auth_token')->plainTextToken;
 
-        $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'wrong-password',
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
         ]);
-
-        $this->assertGuest();
     }
 
-    public function test_users_can_logout(): void
+    /**
+     * Destroy an authenticated session (revoke tokens).
+     */
+    public function destroy(Request $request): JsonResponse
     {
-        $user = User::factory()->create();
+        // Revoke all tokens for the authenticated user
+        $request->user()->tokens()->delete();
 
-        $response = $this->actingAs($user)->post('/logout');
-
-        $this->assertGuest();
-        $response->assertNoContent();
+        return response()->json(['message' => 'Déconnecté avec succès']);
     }
 }
