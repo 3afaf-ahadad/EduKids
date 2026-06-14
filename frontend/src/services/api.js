@@ -30,6 +30,15 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Attach Bearer token if available
+api.interceptors.request.use((config) => {
+  const token = api.defaults.headers.common['Authorization'];
+  if (token) {
+    config.headers['Authorization'] = token;
+  }
+  return config;
+});
+
 // ── Auth ──
 export const register = (data) => api.post("/register", data);
 export const login = (data) => api.post("/login", data);

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { login as apiLogin, logout as apiLogout, getMe } from '../services/api';
+import api from '../services/api'; // ← add this
 
 const AuthContext = createContext();
 
@@ -19,12 +20,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    await apiLogin({ email, password });
+    const response = await apiLogin({ email, password });
+    api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
     await fetchUser();
   };
 
   const logout = async () => {
     await apiLogout();
+    delete api.defaults.headers.common['Authorization'];
     setUser(null);
   };
 
