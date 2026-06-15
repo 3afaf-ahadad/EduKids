@@ -6,7 +6,7 @@ import {
   deleteChild,
 } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [newChildName, setNewChildName] = useState("");
   const [newChildAge, setNewChildAge] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -97,6 +98,11 @@ export default function Dashboard() {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F7F9FF] to-[#E8F0F8] font-['Nunito',sans-serif]">
       {/* Header */}
@@ -108,7 +114,7 @@ export default function Dashboard() {
           </h1>
         </div>
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="bg-white border border-[#E0E2E9] text-[#404751] px-5 py-2 rounded-full hover:bg-gray-50 transition shadow-sm"
         >
           Se déconnecter
