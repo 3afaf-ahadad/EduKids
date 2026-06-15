@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
 import {
-  getChildren,
   getDashboardStats,
   createChild,
+  updateChild,
   deleteChild,
 } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const [children, setChildren] = useState([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newChildName, setNewChildName] = useState("");
-  const [newChildAge, setNewChildAge] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [editingChild, setEditingChild] = useState(null); // null = add mode
+  const [formName, setFormName] = useState("");
+  const [formAge, setFormAge] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -24,10 +25,9 @@ export default function Dashboard() {
   const fetchData = async () => {
     try {
       const res = await getDashboardStats();
-      const stats = res.data; // array of { id, name, age, progress: { alphabet, numbers, colors } }
+      const stats = res.data;
       const mapped = stats.map((child) => ({
         ...child,
-        // Convert the backend progress shape to what the UI expects
         prog: {
           alphabet_completed: child.progress.alphabet.completed,
           alphabet_total: child.progress.alphabet.total,
@@ -57,28 +57,53 @@ export default function Dashboard() {
     }
   };
 
-  const addChild = async (e) => {
+  const openAddModal = () => {
+    setEditingChild(null);
+    setFormName("");
+    setFormAge("");
+    setShowModal(true);
+  };
+
+  const openEditModal = (child) => {
+    setEditingChild(child);
+    setFormName(child.name);
+    setFormAge(child.age ? String(child.age) : "");
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingChild(null);
+    setFormName("");
+    setFormAge("");
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!newChildName.trim()) return;
+    if (!formName.trim()) return;
 
     try {
-      await createChild({
-        name: newChildName,
-        age: newChildAge || null,
-      });
-      setNewChildName("");
-      setNewChildAge("");
-      setShowAddModal(false);
-      fetchData(); // refresh list
+      if (editingChild) {
+        // Update existing child
+        await updateChild(editingChild.id, {
+          name: formName,
+          age: formAge || null,
+        });
+      } else {
+        // Create new child
+        await createChild({ name: formName, age: formAge || null });
+      }
+      closeModal();
+      fetchData();
     } catch (err) {
-      console.error("Erreur création enfant :", err);
+      console.error("Erreur :", err);
       if (err.response?.status === 422) {
         setError(
-          err.response.data.message || "Limite atteinte ou données invalides.",
+          err.response.data.message || "Données invalides ou limite atteinte.",
         );
       } else {
-        setError("Impossible de créer l'enfant.");
+        setError("Opération échouée.");
       }
     }
   };
@@ -127,7 +152,7 @@ export default function Dashboard() {
             Mes Enfants
           </h2>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={openAddModal}
             className="bg-gradient-to-r from-[#4DABF7] to-[#9C7AFF] text-white font-semibold px-5 py-2.5 rounded-full shadow-md hover:shadow-lg transition transform hover:scale-105 flex items-center gap-2"
           >
             + Ajouter un enfant
@@ -159,34 +184,38 @@ export default function Dashboard() {
                       </span>
                     )}
                   </div>
-                  <Link
-                    to={`/enfant/${child.id}`}
-                    className="bg-[#F1F4FA] text-[#00639C] px-4 py-2 rounded-full text-sm font-semibold hover:bg-[#E5E8EF] transition shadow-sm flex items-center gap-1"
-                  >
-                    Modifier
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditModal(child)}
+                      className="bg-[#F1F4FA] text-[#00639C] px-4 py-2 rounded-full text-sm font-semibold hover:bg-[#E5E8EF] transition shadow-sm flex items-center gap-1"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                      />
-                    </svg>
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(child.id)}
-                    className="bg-red-100 text-red-600 px-3 py-2 rounded-full text-sm font-semibold hover:bg-red-200 transition"
-                  >
-                    Supprimer
-                  </button>
+                      Modifier
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(child.id)}
+                      className="bg-red-100 text-red-600 px-3 py-2 rounded-full text-sm font-semibold hover:bg-red-200 transition"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
                 </div>
 
+                {/* Progress cards unchanged */}
                 <div className="grid grid-cols-3 gap-4 mt-4">
+                  {/* ... (same as before) ... */}
                   <div className="bg-[#CEE5FF] bg-opacity-40 rounded-xl p-3 text-center">
                     <div className="text-sm font-semibold text-[#00639C]">
                       A-Z Alphabet
@@ -201,7 +230,6 @@ export default function Dashboard() {
                       />
                     </div>
                   </div>
-
                   <div className="bg-[#E8DDFF] bg-opacity-40 rounded-xl p-3 text-center">
                     <div className="text-sm font-semibold text-[#6844C8]">
                       Numbers
@@ -216,7 +244,6 @@ export default function Dashboard() {
                       />
                     </div>
                   </div>
-
                   <div className="bg-[#FFDDAF] bg-opacity-40 rounded-xl p-3 text-center">
                     <div className="text-sm font-semibold text-[#DB980F]">
                       Colors
@@ -241,7 +268,7 @@ export default function Dashboard() {
           <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-[#E0E2E9] mt-4">
             <p className="text-[#404751]">Aucun enfant pour le moment.</p>
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={openAddModal}
               className="mt-3 text-[#00639C] font-semibold underline"
             >
               Ajouter un premier enfant
@@ -250,17 +277,19 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Modal d'ajout d'enfant */}
-      {showAddModal && (
+      {/* Modal (Add / Edit) */}
+      {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-[#E0E2E9]">
             <h3 className="text-2xl font-bold text-[#00639C] mb-2">
-              Ajouter un enfant
+              {editingChild ? "Modifier l'enfant" : "Ajouter un enfant"}
             </h3>
             <p className="text-[#404751] mb-6">
-              Créez un nouveau profil pour commencer l'aventure !
+              {editingChild
+                ? "Modifiez le nom ou l'âge de l'enfant."
+                : "Créez un nouveau profil pour commencer l'aventure !"}
             </p>
-            <form onSubmit={addChild}>
+            <form onSubmit={handleSubmit}>
               <div className="mb-5">
                 <label className="block text-[#181C21] font-semibold mb-1">
                   Prénom
@@ -268,8 +297,8 @@ export default function Dashboard() {
                 <input
                   type="text"
                   placeholder="Ex: Léo"
-                  value={newChildName}
-                  onChange={(e) => setNewChildName(e.target.value)}
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
                   className="w-full px-4 py-3 bg-[#F1F4FA] border border-[#E0E2E9] rounded-full focus:outline-none focus:ring-2 focus:ring-[#4DABF7]"
                   required
                 />
@@ -279,8 +308,8 @@ export default function Dashboard() {
                   Âge
                 </label>
                 <select
-                  value={newChildAge}
-                  onChange={(e) => setNewChildAge(e.target.value)}
+                  value={formAge}
+                  onChange={(e) => setFormAge(e.target.value)}
                   className="w-full px-4 py-3 bg-[#F1F4FA] border border-[#E0E2E9] rounded-full focus:outline-none focus:ring-2 focus:ring-[#4DABF7] text-[#404751]"
                 >
                   <option value="">Sélectionner un âge</option>
@@ -294,7 +323,7 @@ export default function Dashboard() {
               <div className="flex gap-3 justify-end">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={closeModal}
                   className="px-5 py-2.5 border border-[#E0E2E9] rounded-full text-[#404751] hover:bg-gray-50 transition"
                 >
                   Annuler
@@ -303,7 +332,7 @@ export default function Dashboard() {
                   type="submit"
                   className="bg-gradient-to-r from-[#4DABF7] to-[#9C7AFF] text-white px-5 py-2.5 rounded-full font-semibold shadow-md hover:shadow-lg flex items-center gap-2"
                 >
-                  Créer le compte enfant 🎁
+                  {editingChild ? "Enregistrer" : "Créer le compte enfant 🎁"}
                 </button>
               </div>
             </form>
