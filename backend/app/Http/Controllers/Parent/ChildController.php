@@ -49,8 +49,15 @@ class ChildController extends Controller
     {
         $this->authorize('update', $child);
 
-        $request->validate(['name' => 'required|string|max:255']);
-        $child->update(['name' => $request->name]);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'age'  => 'nullable|integer|min:1|max:12',
+        ]);
+
+        $child->update([
+            'name' => $request->name,
+            'age'  => $request->age,
+        ]);
 
         return response()->json($child);
     }
