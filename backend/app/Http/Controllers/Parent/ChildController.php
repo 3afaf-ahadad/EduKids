@@ -17,34 +17,41 @@ class ChildController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'age'  => 'nullable|integer|min:1|max:12',
-        ]);
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'age'  => 'nullable|integer|min:1|max:12',
+    ]);
 
-        $parent = $request->user();
+    $parent = $request->user();
 
-        if ($parent->children()->count() >= 5) {
-            return response()->json(['message' => 'Vous avez déjà 5 enfants'], 422);
-        }
-
-        $childUser = User::create([
-            'name'     => $request->name,
-            'email'    => 'child_' . $parent->id . '_' . now()->timestamp . '@edukids.local',
-            'password' => Hash::make('password'),
-            'role'     => 'enfant',
-        ]);
-
-        $child = $parent->children()->create([
-            'name'  => $request->name,
-            'age'   => $request->age,
-            'user_id' => $childUser->id,
-        ]);
-
-        return response()->json($child, 201);
+    if ($parent->children()->count() >= 5) {
+        return response()->json(['message' => 'Vous avez déjà 5 enfants'], 422);
     }
 
+    // Generate readable email + password for the child
+    $email = strtolower(trim($request->name)) . '.' . $parent->id . '.' . now()->timestamp . '@edukids.local';
+    $password = 'edukids' . now()->format('dm');  // easy for parent to remember (e.g., edukids1506)
+
+    $childUser = User::create([
+        'name'     => $request->name,
+        'email'    => $email,
+        'password' => Hash::make($password),
+        'role'     => 'enfant',
+    ]);
+
+    $child = $parent->children()->create([
+        'name'    => $request->name,
+        'age'     => $request->age,
+        'user_id' => $childUser->id,
+    ]);
+
+    return response()->json([
+        'child'    => $child,
+        'email'    => $email,
+        'password' => $password,
+    ], 201);
+}
     public function update(Request $request, Child $child)
     {
         $this->authorize('update', $child);
