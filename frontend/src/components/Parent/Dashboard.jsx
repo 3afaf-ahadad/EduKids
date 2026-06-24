@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
+  const [createdCredentials, setCreatedCredentials] = useState(null);
   const [children, setChildren] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingChild, setEditingChild] = useState(null); // null = add mode
@@ -61,6 +62,7 @@ export default function Dashboard() {
     setEditingChild(null);
     setFormName("");
     setFormAge("");
+    setCreatedCredentials(null);
     setShowModal(true);
   };
 
@@ -85,14 +87,20 @@ export default function Dashboard() {
 
     try {
       if (editingChild) {
-        // Update existing child
         await updateChild(editingChild.id, {
           name: formName,
           age: formAge || null,
         });
       } else {
-        // Create new child
-        await createChild({ name: formName, age: formAge || null });
+        const res = await createChild({ name: formName, age: formAge || null });
+        // Store credentials to show them
+        setCreatedCredentials({
+          childName: formName,
+          email: res.data.email,
+          password: res.data.password,
+        });
+        // Don't close the modal yet – we'll show the credentials first
+        return;
       }
       closeModal();
       fetchData();
@@ -337,6 +345,34 @@ export default function Dashboard() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+      {createdCredentials && (
+        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-2xl text-center">
+          <h4 className="text-xl font-bold text-green-700 mb-2">
+            ✅ Compte créé !
+          </h4>
+          <p className="text-sm text-gray-600">
+            Connectez-vous avec ces identifiants :
+          </p>
+          <div className="mt-3 bg-white p-3 rounded-xl text-left">
+            <p>
+              <strong>Email :</strong> {createdCredentials.email}
+            </p>
+            <p>
+              <strong>Mot de passe :</strong> {createdCredentials.password}
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setCreatedCredentials(null);
+              closeModal();
+              fetchData();
+            }}
+            className="mt-4 bg-[#4DABF7] text-white px-6 py-2 rounded-full font-semibold"
+          >
+            OK, compris
+          </button>
         </div>
       )}
     </div>
