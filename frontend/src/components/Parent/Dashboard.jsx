@@ -221,6 +221,15 @@ export default function Dashboard() {
                   </div>
                 </div>
 
+                <div className="mt-3 p-3 bg-gray-50 rounded-xl text-xs text-gray-600">
+                  <p>
+                    <strong>Login :</strong> {child.email || "—"}
+                  </p>
+                  <p>
+                    <strong>Mot de passe :</strong> {child.password || "—"}
+                  </p>
+                </div>
+
                 {/* Progress cards unchanged */}
                 <div className="grid grid-cols-3 gap-4 mt-4">
                   {/* ... (same as before) ... */}
@@ -286,87 +295,103 @@ export default function Dashboard() {
       </div>
 
       {/* Modal (Add / Edit) */}
-{showModal && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-[#E0E2E9]">
-      
-      {createdCredentials ? (
-        /* ── Credentials view (after creation) ── */
-        <>
-          <h3 className="text-2xl font-bold text-[#00639C] mb-2">✅ Compte créé !</h3>
-          <p className="text-[#404751] mb-4">Connectez-vous avec ces identifiants :</p>
-          <div className="bg-green-50 p-4 rounded-xl text-left mb-6">
-            <p><strong>Email :</strong> {createdCredentials.email}</p>
-            <p><strong>Mot de passe :</strong> {createdCredentials.password}</p>
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-[#E0E2E9]">
+            {createdCredentials ? (
+              /* ── Credentials view (after creation) ── */
+              <>
+                <h3 className="text-2xl font-bold text-[#00639C] mb-2">
+                  ✅ Compte créé !
+                </h3>
+                <p className="text-[#404751] mb-4">
+                  Connectez-vous avec ces identifiants :
+                </p>
+                <div className="bg-green-50 p-4 rounded-xl text-left mb-6">
+                  <p>
+                    <strong>Email :</strong> {createdCredentials.email}
+                  </p>
+                  <p>
+                    <strong>Mot de passe :</strong>{" "}
+                    {createdCredentials.password}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setCreatedCredentials(null);
+                    closeModal();
+                    fetchData(); // ← now the list refreshes immediately
+                  }}
+                  className="w-full bg-[#4DABF7] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#3d9be0] transition"
+                >
+                  OK, j'ai noté
+                </button>
+              </>
+            ) : (
+              /* ── Form view (add / edit) ── */
+              <>
+                <h3 className="text-2xl font-bold text-[#00639C] mb-2">
+                  {editingChild ? "Modifier l'enfant" : "Ajouter un enfant"}
+                </h3>
+                <p className="text-[#404751] mb-6">
+                  {editingChild
+                    ? "Modifiez le nom ou l'âge de l'enfant."
+                    : "Créez un nouveau profil pour commencer l'aventure !"}
+                </p>
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-5">
+                    <label className="block text-[#181C21] font-semibold mb-1">
+                      Prénom
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Léo"
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
+                      className="w-full px-4 py-3 bg-[#F1F4FA] border border-[#E0E2E9] rounded-full focus:outline-none focus:ring-2 focus:ring-[#4DABF7]"
+                      required
+                    />
+                  </div>
+                  <div className="mb-6">
+                    <label className="block text-[#181C21] font-semibold mb-1">
+                      Âge
+                    </label>
+                    <select
+                      value={formAge}
+                      onChange={(e) => setFormAge(e.target.value)}
+                      className="w-full px-4 py-3 bg-[#F1F4FA] border border-[#E0E2E9] rounded-full focus:outline-none focus:ring-2 focus:ring-[#4DABF7] text-[#404751]"
+                    >
+                      <option value="">Sélectionner un âge</option>
+                      {[...Array(12).keys()].map((i) => (
+                        <option key={i} value={i + 2}>
+                          {i + 2} ans
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      className="px-5 py-2.5 border border-[#E0E2E9] rounded-full text-[#404751] hover:bg-gray-50 transition"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-gradient-to-r from-[#4DABF7] to-[#9C7AFF] text-white px-5 py-2.5 rounded-full font-semibold shadow-md hover:shadow-lg flex items-center gap-2"
+                    >
+                      {editingChild
+                        ? "Enregistrer"
+                        : "Créer le compte enfant 🎁"}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
-          <button
-            onClick={() => {
-              setCreatedCredentials(null);
-              closeModal();
-              fetchData();  // ← now the list refreshes immediately
-            }}
-            className="w-full bg-[#4DABF7] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#3d9be0] transition"
-          >
-            OK, j'ai noté
-          </button>
-        </>
-      ) : (
-        /* ── Form view (add / edit) ── */
-        <>
-          <h3 className="text-2xl font-bold text-[#00639C] mb-2">
-            {editingChild ? "Modifier l'enfant" : "Ajouter un enfant"}
-          </h3>
-          <p className="text-[#404751] mb-6">
-            {editingChild
-              ? "Modifiez le nom ou l'âge de l'enfant."
-              : "Créez un nouveau profil pour commencer l'aventure !"}
-          </p>
-          <form onSubmit={handleSubmit}>
-            <div className="mb-5">
-              <label className="block text-[#181C21] font-semibold mb-1">Prénom</label>
-              <input
-                type="text"
-                placeholder="Ex: Léo"
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                className="w-full px-4 py-3 bg-[#F1F4FA] border border-[#E0E2E9] rounded-full focus:outline-none focus:ring-2 focus:ring-[#4DABF7]"
-                required
-              />
-            </div>
-            <div className="mb-6">
-              <label className="block text-[#181C21] font-semibold mb-1">Âge</label>
-              <select
-                value={formAge}
-                onChange={(e) => setFormAge(e.target.value)}
-                className="w-full px-4 py-3 bg-[#F1F4FA] border border-[#E0E2E9] rounded-full focus:outline-none focus:ring-2 focus:ring-[#4DABF7] text-[#404751]"
-              >
-                <option value="">Sélectionner un âge</option>
-                {[...Array(12).keys()].map((i) => (
-                  <option key={i} value={i + 2}>{i + 2} ans</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="px-5 py-2.5 border border-[#E0E2E9] rounded-full text-[#404751] hover:bg-gray-50 transition"
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                className="bg-gradient-to-r from-[#4DABF7] to-[#9C7AFF] text-white px-5 py-2.5 rounded-full font-semibold shadow-md hover:shadow-lg flex items-center gap-2"
-              >
-                {editingChild ? "Enregistrer" : "Créer le compte enfant 🎁"}
-              </button>
-            </div>
-          </form>
-        </>
+        </div>
       )}
-    </div>
-  </div>
-)}
     </div>
   );
 }
