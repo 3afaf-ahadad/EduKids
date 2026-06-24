@@ -37,6 +37,7 @@ class ChildController extends Controller
         'name'     => $request->name,
         'email'    => $email,
         'password' => Hash::make($password),
+        'plain_password' => $password,
         'role'     => 'enfant',
     ]);
 
