@@ -1,24 +1,22 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import ProtectedRoute from './components/Common/ProtectedRoute';
-import Login from './components/Auth/Login';
-import Register from './components/Auth/Register';
-import Dashboard from './components/Parent/Dashboard';
-import Modules from './components/Enfant/Modules';
-import Alphabet from './components/Enfant/Alphabet';
-import Numbers from './components/Enfant/Numbers';
-import Colors from './components/Enfant/Colors';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/Common/ProtectedRoute";
+import Login from "./components/Auth/Login";
+import Register from "./components/Auth/Register";
+import Dashboard from "./components/Parent/Dashboard";
+import Modules from "./components/Enfant/Modules";
+import Alphabet from "./components/Enfant/Alphabet";
+import Numbers from "./components/Enfant/Numbers";
+import Colors from "./components/Enfant/Colors";
 
 function AppRoutes() {
   const { user } = useAuth();
 
   return (
     <Routes>
-      {/* Public routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Parent-only routes */}
       <Route
         path="/dashboard"
         element={
@@ -28,7 +26,6 @@ function AppRoutes() {
         }
       />
 
-      {/* Child-only routes */}
       <Route
         path="/enfant/:childId"
         element={
@@ -62,15 +59,17 @@ function AppRoutes() {
         }
       />
 
-      {/* Root redirect — based on role */}
+      {/* Root redirect */}
       <Route
         path="/"
         element={
           user ? (
             user.role === 'parent' ? (
               <Navigate to="/dashboard" replace />
+            ) : user.child ? (
+              <Navigate to={`/enfant/${user.child.id}`} replace />
             ) : (
-              <Navigate to={`/enfant/${user.child?.id || 1}`} replace />
+              <div className="text-center p-10 text-xl">Chargement du profil...</div>
             )
           ) : (
             <Navigate to="/login" replace />
@@ -78,8 +77,10 @@ function AppRoutes() {
         }
       />
 
-      {/* Catch-all — redirect to login */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route
+        path="*"
+        element={user ? <Navigate to="/" replace /> : <Navigate to="/login" replace />}
+      />
     </Routes>
   );
 }
