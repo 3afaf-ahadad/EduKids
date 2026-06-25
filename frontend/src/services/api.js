@@ -9,6 +9,11 @@ const api = axios.create({
   },
 });
 
+const storedToken = localStorage.getItem('auth_token');
+if (storedToken) {
+  api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+}
+
 // CSRF cookie for state-changing requests
 function getCookie(name) {
   const value = `; ${document.cookie}`;
@@ -35,6 +40,9 @@ api.interceptors.request.use((config) => {
   const token = api.defaults.headers.common['Authorization'];
   if (token) {
     config.headers['Authorization'] = token;
+    // Persist to localStorage
+    const plainToken = token.replace('Bearer ', '');
+    localStorage.setItem('auth_token', plainToken);
   }
   return config;
 });
