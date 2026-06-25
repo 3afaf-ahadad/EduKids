@@ -39,9 +39,7 @@ export default function Register() {
 
       // 2. Connexion automatique
       await login(email, password);
-
-      // 3. Redirection vers le tableau de bord
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       console.error("Erreur inscription/connexion :", err.response?.data);
       const message =
@@ -137,7 +135,9 @@ export default function Register() {
             className="w-full bg-gradient-to-r from-[#4DABF7] via-[#6844C8] to-[#DB980F] text-white font-bold py-3 rounded-full shadow-lg flex items-center justify-center gap-2 transition-all duration-200 transform hover:scale-105 active:scale-95 text-lg hover:shadow-xl"
           >
             Créer un compte
-            <span className="text-xl transition-transform group-hover:translate-x-1">→</span>
+            <span className="text-xl transition-transform group-hover:translate-x-1">
+              →
+            </span>
           </button>
 
           <p className="text-center text-gray-500 pt-2">
