@@ -11,15 +11,15 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    try {
-      await login(email, password);
-      navigate("/dashboard");
-    } catch {
-      setError("Email ou mot de passe incorrect");
-    }
-  };
+  e.preventDefault();
+  setError("");
+  try {
+    await login(email, password);
+    navigate("/");
+  } catch {
+    setError("Email ou mot de passe incorrect");
+  }
+};
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#F7F9FF] font-['Nunito',sans-serif] flex items-center justify-center p-6">
