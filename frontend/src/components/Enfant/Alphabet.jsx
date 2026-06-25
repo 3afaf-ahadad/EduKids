@@ -1,82 +1,87 @@
-// src/components/Enfant/Alphabet.jsx
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { mockLetters, mockCompletedAlphabetIds } from '../../mockData';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getAlphabet, saveProgress } from '../../services/api';
 
 export default function Alphabet() {
   const { childId } = useParams();
   const navigate = useNavigate();
   const [letters, setLetters] = useState([]);
   const [completedIds, setCompletedIds] = useState({});
-  // attempts stocke le nombre de clics pour chaque lettre (id -> count)
   const [attempts, setAttempts] = useState({});
 
   useEffect(() => {
-    setLetters(mockLetters);
-    setCompletedIds(mockCompletedAlphabetIds);
-    // Initialiser attempts pour les lettres déjà complétées (optionnel)
-    const initialAttempts = {};
-    Object.keys(mockCompletedAlphabetIds).forEach(id => {
-      initialAttempts[id] = 3; // déjà appris
+    getAlphabet().then((res) => {
+      setLetters(res.data);
+      // fetch progress for this child (simplified: init empty)
+      setCompletedIds({});
+      setAttempts({});
     });
-    setAttempts(initialAttempts);
   }, []);
 
-  const playSound = () => alert('🔊 Son de la lettre (simulation)');
-
-  const saveProgress = (letterId) => {
-    if (completedIds[letterId]) return;
-
-    // Incrémenter le compteur de tentatives
-    const newAttempts = { ...attempts };
-    newAttempts[letterId] = (newAttempts[letterId] || 0) + 1;
-    setAttempts(newAttempts);
-
-    // Si on atteint 3, marquer comme complété
-    if (newAttempts[letterId] >= 3) {
-      setCompletedIds(prev => ({ ...prev, [letterId]: true }));
-      alert('🎉 Félicitations ! Cette lettre est maintenant apprise.');
-    }
+  const playSound = (soundUrl) => {
+    const audio = new Audio(`http://localhost:8000${soundUrl}`);
+    audio.play();
   };
 
   const handleClick = (letter) => {
-    playSound();
-    saveProgress(letter.id);
+    // Play sound
+    playSound(letter.sound_url);
+
+    if (completedIds[letter.id]) return;
+
+    // Increment local attempts
+    const newAttempts = { ...attempts };
+    newAttempts[letter.id] = (newAttempts[letter.id] || 0) + 1;
+    setAttempts(newAttempts);
+
+    // Save to backend
+    saveProgress('alphabet', letter.id);
+
+    // Mark completed after 3 attempts (RG3)
+    if (newAttempts[letter.id] >= 3) {
+      setCompletedIds((prev) => ({ ...prev, [letter.id]: true }));
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FEFEFE] via-[#F0F8FF] to-[#E8F0F8] font-['Nunito',sans-serif] p-6">
       <div className="relative container mx-auto max-w-5xl">
         <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-          <button onClick={() => navigate(`/enfant/${childId}`)} className="bg-white text-[#00639C] font-semibold px-5 py-2.5 rounded-full shadow-md border">← Accueil</button>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-[#00639C]">L'alphabet</h1>
-          <Link to={`/enfant/${childId}/numbers`} className="bg-gradient-to-r from-[#4DABF7] to-[#9C7AFF] text-white font-semibold px-5 py-2.5 rounded-full">Les Nombres →</Link>
+          <button
+            onClick={() => navigate(`/enfant/${childId}`)}
+            className="bg-white text-[#00639C] font-semibold px-5 py-2.5 rounded-full shadow-md border"
+          >
+            ← Retour
+          </button>
+          <h1 className="text-3xl font-extrabold text-[#00639C]">Alphabet</h1>
         </div>
-        <p className="text-center text-[#404751] text-lg mb-10">Touche une lettre pour entendre son son. Après 3 fois, tu l'auras apprise !</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
-          {letters.map(letter => {
-            const isCompleted = completedIds[letter.id];
-            const currentAttempts = attempts[letter.id] || 0;
-            return (
-              <button
-                key={letter.id}
-                onClick={() => handleClick(letter)}
-                className={`relative bg-white rounded-2xl p-4 text-center shadow-md hover:shadow-xl transition transform hover:scale-105 ${isCompleted ? 'border-l-4 border-l-[#DB980F]' : ''}`}
-              >
-                <div className="text-4xl md:text-5xl font-bold text-[#00639C] mb-1">
-                  {letter.letter_uppercase} {letter.letter_uppercase.toLowerCase()}
-                </div>
-                <div className="text-3xl mb-1">{letter.image}</div>
-                <div className="text-xs md:text-sm text-[#6B7280] capitalize">{letter.example_word}</div>
-                {!isCompleted && (
-                  <div className="text-xs text-[#DB980F] mt-1">{currentAttempts}/3</div>
-                )}
-                {isCompleted && (
-                  <span className="absolute top-2 right-2 text-[#DB980F] text-lg font-bold">✓</span>
-                )}
-              </button>
-            );
-          })}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {letters.map((letter) => (
+            <button
+              key={letter.id}
+              onClick={() => handleClick(letter)}
+              className={`relative bg-white rounded-2xl p-4 text-center shadow-md hover:shadow-xl transition transform hover:scale-105 border-2 ${
+                completedIds[letter.id] ? 'border-green-400 bg-green-50' : 'border-[#E0E2E9]'
+              }`}
+            >
+              <div className="text-3xl font-extrabold text-[#181C21]">
+                {letter.letter_uppercase}
+              </div>
+              <div className="text-xl text-gray-400">{letter.letter_lowercase}</div>
+              <div className="text-4xl mt-2">
+                <img
+                  src={`http://localhost:8000${letter.image_url}`}
+                  alt={letter.example_word}
+                  className="w-10 h-10 mx-auto object-contain"
+                  onError={(e) => (e.target.style.display = 'none')}
+                />
+              </div>
+              <div className="text-xs text-gray-500 mt-1">{letter.example_word}</div>
+              {completedIds[letter.id] && (
+                <div className="absolute top-1 right-1 text-green-500 text-xl">✓</div>
+              )}
+            </button>
+          ))}
         </div>
       </div>
     </div>
