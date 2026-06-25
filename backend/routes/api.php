@@ -17,7 +17,11 @@ Route::post('/logout', [\App\Http\Controllers\Auth\AuthenticatedSessionControlle
 
 // Current user
 Route::get('/me', function (Request $request) {
-    return $request->user();
+    $user = $request->user();
+    if ($user->role === 'enfant') {
+        $user->load('child');
+    }
+    return $user;
 })->middleware('auth:sanctum');
 
 // Parent routes
