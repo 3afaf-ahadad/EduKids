@@ -10,20 +10,31 @@ use Illuminate\Http\Request;
 class ProgressController extends Controller
 {
     public function index(Request $request)
-{
-    $child = $request->user()->child;
-    $progress = Progress::where('child_id', $child->id)
-        ->where('completed', true)
-        ->selectRaw('content_type, count(*) as count')
-        ->groupBy('content_type')
-        ->pluck('count', 'content_type');
+    {
+        $child = $request->user()->child;
+        $progress = Progress::where('child_id', $child->id)
+            ->where('completed', true)
+            ->selectRaw('content_type, count(*) as count')
+            ->groupBy('content_type')
+            ->pluck('count', 'content_type');
 
-    return response()->json([
-        'alphabet' => $progress['alphabet'] ?? 0,
-        'number'   => $progress['number'] ?? 0,
-        'color'    => $progress['color'] ?? 0,
-    ]);
-}
+        return response()->json([
+            'alphabet' => $progress['alphabet'] ?? 0,
+            'number'   => $progress['number'] ?? 0,
+            'color'    => $progress['color'] ?? 0,
+        ]);
+    }
+
+    public function show(Request $request, string $contentType)
+    {
+        $child = $request->user()->child;
+        $records = Progress::where('child_id', $child->id)
+            ->where('content_type', $contentType)
+            ->get(['content_id', 'attempts', 'completed']);
+
+        return response()->json($records);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -41,10 +52,8 @@ class ProgressController extends Controller
 
         $progress->increment('attempts');
 
-        if ($request->content_type === 'alphabet' && $progress->attempts >= 3) {
+        if ($progress->attempts >= 3) {
             $progress->completed = true;
-        } elseif (in_array($request->content_type, ['number', 'color'])) {
-            $progress->completed = true; // single correct interaction
         }
         $progress->save();
 
