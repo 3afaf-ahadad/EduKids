@@ -372,7 +372,10 @@ export default function Dashboard() {
                   <div className="flex gap-3 justify-end">
                     <button
                       type="button"
-                      onClick={closeModal}
+                      onClick={() => {
+                        setError("");
+                        closeModal();
+                      }}
                       className="px-5 py-2.5 border border-[#E0E2E9] rounded-full text-[#404751] hover:bg-gray-50 transition"
                     >
                       Annuler
