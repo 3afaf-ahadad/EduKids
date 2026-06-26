@@ -1,18 +1,18 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getColors, saveProgress } from '../../services/api';
+import { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useParams, useNavigate } from "react-router-dom";
+import { getColors, saveProgress } from "../../services/api";
 
 // Emoji map for colors (fallback if image_url is empty)
 const colorEmojis = {
-  Rouge: '🍎',
-  Bleu: '🌊',
-  Vert: '🌳',
-  Jaune: '☀️',
-  Orange: '🥕',
-  Violet: '🌸',
-  Rose: '🍬',
-  Noir: '🐧',
+  Rouge: "🍎",
+  Bleu: "🌊",
+  Vert: "🌳",
+  Jaune: "☀️",
+  Orange: "🥕",
+  Violet: "🌸",
+  Rose: "🍬",
+  Noir: "🐧",
 };
 
 export default function Colors() {
@@ -22,12 +22,21 @@ export default function Colors() {
   const [completedIds, setCompletedIds] = useState({});
   const [justCompleted, setJustCompleted] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
-  const { user } = useAuth(); 
+  const { user } = useAuth();
 
   useEffect(() => {
     getColors().then((res) => {
       setColors(res.data);
-      setCompletedIds({});
+      api
+        .get("/progress/color")
+        .then((progRes) => {
+          const saved = {};
+          progRes.data.forEach((p) => {
+            if (p.completed) saved[p.content_id] = true;
+          });
+          setCompletedIds(saved);
+        })
+        .catch(() => {});
     });
   }, []);
 
@@ -47,7 +56,7 @@ export default function Colors() {
     if (completedIds[color.id]) return;
 
     playSound(color.sound_url);
-    saveProgress('color', color.id);
+    saveProgress("color", color.id);
 
     // Color learned on first correct identification (RG5)
     if (!completedIds[color.id]) {
@@ -60,7 +69,7 @@ export default function Colors() {
   const closePopup = () => setSelectedColor(null);
 
   const getEmoji = (color) => {
-    return colorEmojis[color.name] || '🎨';
+    return colorEmojis[color.name] || "🎨";
   };
 
   return (
@@ -73,7 +82,9 @@ export default function Colors() {
           >
             ← Retour
           </button>
-          <span className="text-sm text-gray-500">Bonjour {user?.child?.name}</span>
+          <span className="text-sm text-gray-500">
+            Bonjour {user?.child?.name}
+          </span>
           <h1 className="text-3xl font-extrabold text-[#DB980F]">Couleurs</h1>
         </div>
 
@@ -85,18 +96,22 @@ export default function Colors() {
               onClick={() => handleClick(color)}
               className={`relative bg-white rounded-2xl p-6 text-center shadow-md hover:shadow-xl transition transform hover:scale-105 border-2 ${
                 completedIds[color.id]
-                  ? 'border-green-400 bg-green-50'
-                  : 'border-[#E0E2E9]'
+                  ? "border-green-400 bg-green-50"
+                  : "border-[#E0E2E9]"
               }`}
             >
               <div
                 className="w-20 h-20 rounded-full mx-auto mb-4 shadow-inner border-4 border-white"
                 style={{ backgroundColor: color.hex_code }}
               />
-              <div className="text-xl font-bold text-[#181C21]">{color.name}</div>
+              <div className="text-xl font-bold text-[#181C21]">
+                {color.name}
+              </div>
               <div className="text-4xl mt-2">{getEmoji(color)}</div>
               {completedIds[color.id] && (
-                <div className="absolute top-2 right-2 text-green-500 text-2xl">✓</div>
+                <div className="absolute top-2 right-2 text-green-500 text-2xl">
+                  ✓
+                </div>
               )}
               {justCompleted === color.id && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-2xl">
@@ -151,8 +166,8 @@ export default function Colors() {
             {/* Progress info */}
             <div className="mt-4 text-sm text-gray-500">
               {completedIds[selectedColor.id]
-                ? '✅ Couleur apprise !'
-                : 'Clique pour apprendre cette couleur'}
+                ? "✅ Couleur apprise !"
+                : "Clique pour apprendre cette couleur"}
             </div>
 
             {justCompleted === selectedColor.id && (

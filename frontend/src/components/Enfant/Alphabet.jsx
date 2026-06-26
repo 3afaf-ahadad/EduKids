@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAlphabet, saveProgress } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import api from '../../services/api';
 
-// Emoji map for each letter (fallback if image_url is empty)
 const letterEmojis = {
   A: '🍎', B: '⚽', C: '🐱', D: '🐬', E: '🐘', F: '🌸', G: '🐸',
   H: '🦉', I: '🏔️', J: '🧸', K: '🥝', L: '🦁', M: '🏠',
@@ -21,12 +21,23 @@ export default function Alphabet() {
   const { user } = useAuth();
 
   useEffect(() => {
-    getAlphabet().then((res) => {
-      setLetters(res.data);
-      setCompletedIds({});
-      setAttempts({});
-    });
-  }, []);
+  getAlphabet().then((res) => {
+    setLetters(res.data);
+    // Load saved progress for alphabet
+    api.get('/progress/alphabet')
+      .then(progRes => {
+        const savedAttempts = {};
+        const savedCompleted = {};
+        progRes.data.forEach(p => {
+          savedAttempts[p.content_id] = p.attempts;
+          if (p.completed) savedCompleted[p.content_id] = true;
+        });
+        setAttempts(savedAttempts);
+        setCompletedIds(savedCompleted);
+      })
+      .catch(() => {});
+  });
+}, []);
 
   const playSound = (soundUrl) => {
     try {
