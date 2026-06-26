@@ -103,14 +103,6 @@ export default function Login() {
             >
               <span className="text-lg">Se connecter</span>
             </button>
-
-            {/* Lien Mot de passe oublié */}
-            <Link
-              to="/forgot-password"
-              className="text-[#00639C] hover:underline text-center"
-            >
-              Mot de passe oublié ?
-            </Link>
           </div>
         </form>
 
