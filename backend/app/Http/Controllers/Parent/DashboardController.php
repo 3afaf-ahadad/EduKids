@@ -18,18 +18,25 @@ class DashboardController extends Controller
         'color'    => \App\Models\Color::count(),
     ];
 
-    $data = $children->map(function ($child) use ($totals) {
-        $completed = Progress::where('child_id', $child->id)
-            ->where('completed', true)
-            ->selectRaw('content_type, count(*) as count')
-            ->groupBy('content_type')
-            ->pluck('count', 'content_type');
+    // Fetch ALL progress for these children in ONE query
+    $childIds = $children->pluck('id');
+    $allProgress = Progress::whereIn('child_id', $childIds)
+        ->where('completed', true)
+        ->selectRaw('child_id, content_type, count(*) as count')
+        ->groupBy('child_id', 'content_type')
+        ->get();
+
+    // Group by child_id for quick lookup
+    $progressByChild = $allProgress->groupBy('child_id');
+
+    $data = $children->map(function ($child) use ($totals, $progressByChild) {
+        $childProgress = $progressByChild->get($child->id, collect([]));
+        $completed = $childProgress->pluck('count', 'content_type');
 
         return [
             'id'   => $child->id,
             'name' => $child->name,
             'age'  => $child->age,
-            // Child login credentials
             'email'    => $child->account->email ?? null,
             'password' => $child->account->plain_password ?? null,
             'progress' => [
