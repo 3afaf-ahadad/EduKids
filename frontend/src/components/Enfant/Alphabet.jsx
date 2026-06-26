@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAlphabet, saveProgress } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Emoji map for each letter (fallback if image_url is empty)
 const letterEmojis = {
@@ -16,7 +17,8 @@ export default function Alphabet() {
   const [letters, setLetters] = useState([]);
   const [completedIds, setCompletedIds] = useState({});
   const [attempts, setAttempts] = useState({});
-  const [selectedLetter, setSelectedLetter] = useState(null); // for popup
+  const [selectedLetter, setSelectedLetter] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     getAlphabet().then((res) => {
@@ -71,6 +73,7 @@ export default function Alphabet() {
           >
             ← Retour
           </button>
+          <span className="text-sm text-gray-500">Bonjour {user?.child?.name}</span>
           <h1 className="text-3xl font-extrabold text-[#00639C]">Alphabet</h1>
         </div>
 

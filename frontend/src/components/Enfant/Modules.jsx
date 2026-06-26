@@ -1,22 +1,39 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import api from "../../services/api";
 
 export default function Modules() {
   const { childId } = useParams();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-
   const child = user?.child;
+  const [progress, setProgress] = useState({
+    alphabet: 0,
+    number: 0,
+    color: 0,
+  });
 
-  // If the loaded child doesn't match the URL parameter, still use the authenticated child
+  useEffect(() => {
+    if (child) {
+      api
+        .get("/child/progress")
+        .then((res) => setProgress(res.data))
+        .catch(() => {});
+    }
+  }, [child]);
+
   if (!child) {
-    return <div className="text-center p-10 text-xl text-gray-500">Chargement...</div>;
+    return (
+      <div className="text-center p-10 text-xl text-gray-500">
+        Chargement...
+      </div>
+    );
   }
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -64,7 +81,29 @@ export default function Modules() {
           <h3 className="text-2xl font-bold text-[#181C21] mb-4 flex items-center gap-2">
             ⭐ Ma progression
           </h3>
-          {/* We'll add progress bars here later if needed */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-3xl">🔤</div>
+              <div className="text-sm font-semibold text-[#00639C]">
+                Alphabet
+              </div>
+              <div className="text-lg font-bold">{progress.alphabet}/26</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl">🔢</div>
+              <div className="text-sm font-semibold text-[#6844C8]">
+                Nombres
+              </div>
+              <div className="text-lg font-bold">{progress.number}/10</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl">🌈</div>
+              <div className="text-sm font-semibold text-[#DB980F]">
+                Couleurs
+              </div>
+              <div className="text-lg font-bold">{progress.color}/8</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

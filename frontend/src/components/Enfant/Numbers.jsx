@@ -3,6 +3,12 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { getNumbers, saveProgress } from "../../services/api";
 
+const numberEmojis = {
+  1: "⭐", 2: "⭐⭐", 3: "⭐⭐⭐", 4: "⭐⭐⭐⭐", 5: "⭐⭐⭐⭐⭐",
+  6: "⭐⭐⭐⭐⭐⭐", 7: "⭐⭐⭐⭐⭐⭐⭐", 8: "⭐⭐⭐⭐⭐⭐⭐⭐",
+  9: "⭐⭐⭐⭐⭐⭐⭐⭐⭐", 10: "⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐",
+};
+
 export default function Numbers() {
   const { childId } = useParams();
   const navigate = useNavigate();
@@ -10,6 +16,8 @@ export default function Numbers() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedIds, setCompletedIds] = useState({});
   const [justCompleted, setJustCompleted] = useState(false);
+  const [animating, setAnimating] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     getNumbers().then((res) => {
@@ -17,6 +25,14 @@ export default function Numbers() {
       setCompletedIds({});
     });
   }, []);
+
+  useEffect(() => {
+    if (numbers.length > 0) {
+      setAnimating(true);
+      const timer = setTimeout(() => setAnimating(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [currentIndex, numbers]);
 
   const playSound = (soundUrl) => {
     const audio = new Audio(`http://localhost:8000${soundUrl}`);
@@ -28,7 +44,6 @@ export default function Numbers() {
     if (!current) return;
     playSound(current.sound_url);
     saveProgress("number", current.id);
-    // Number is learned on first correct count (RG4)
     if (!completedIds[current.id]) {
       setCompletedIds((prev) => ({ ...prev, [current.id]: true }));
       setJustCompleted(true);
@@ -59,29 +74,23 @@ export default function Numbers() {
           >
             ← Retour
           </button>
+          <span className="text-sm text-gray-500">Bonjour {user?.child?.name}</span>
           <h1 className="text-3xl font-extrabold text-[#6844C8]">Nombres</h1>
         </div>
 
         <div className="bg-white rounded-3xl p-8 shadow-xl border border-[#E0E2E9] text-center">
-          <div className="text-8xl font-extrabold text-[#181C21] mb-4">
+          <div className={`text-8xl font-extrabold text-[#181C21] mb-4 ${animating ? "animate-bounce" : ""}`}>
             {current.value}
           </div>
           <div className="text-3xl text-gray-500 mb-4">{current.word}</div>
-          <div className="text-5xl mb-6">
-            <img
-              src={`http://localhost:8000${current.image_url}`}
-              alt={current.word}
-              className="w-24 h-24 mx-auto object-contain"
-              onError={(e) => (e.target.style.display = "none")}
-            />
+          <div className={`text-5xl mb-6 transition-all duration-300 ${animating ? "scale-110" : ""}`}>
+            {numberEmojis[current.value]}
           </div>
           {completedIds[current.id] && (
             <div className="text-green-500 text-2xl mb-4">✓ Appris !</div>
           )}
           {justCompleted && (
-            <div className="text-yellow-500 text-2xl mb-4 animate-bounce">
-              🎉 Bravo !
-            </div>
+            <div className="text-yellow-500 text-2xl mb-4 animate-bounce">🎉 Bravo !</div>
           )}
           <button
             onClick={handleListen}
@@ -97,9 +106,7 @@ export default function Numbers() {
             >
               ← Précédent
             </button>
-            <span className="text-gray-500">
-              {currentIndex + 1} / {numbers.length}
-            </span>
+            <span className="text-gray-500">{currentIndex + 1} / {numbers.length}</span>
             <button
               onClick={goToNext}
               disabled={currentIndex + 1 >= numbers.length}

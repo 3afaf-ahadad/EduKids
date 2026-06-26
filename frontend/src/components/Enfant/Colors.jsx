@@ -21,7 +21,8 @@ export default function Colors() {
   const [colors, setColors] = useState([]);
   const [completedIds, setCompletedIds] = useState({});
   const [justCompleted, setJustCompleted] = useState(null);
-  const [selectedColor, setSelectedColor] = useState(null); // for popup
+  const [selectedColor, setSelectedColor] = useState(null);
+  const { user } = useAuth(); 
 
   useEffect(() => {
     getColors().then((res) => {
@@ -72,6 +73,7 @@ export default function Colors() {
           >
             ← Retour
           </button>
+          <span className="text-sm text-gray-500">Bonjour {user?.child?.name}</span>
           <h1 className="text-3xl font-extrabold text-[#DB980F]">Couleurs</h1>
         </div>
 
