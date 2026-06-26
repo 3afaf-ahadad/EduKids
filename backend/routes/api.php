@@ -35,5 +35,6 @@ Route::middleware(['auth:sanctum', 'role:enfant'])->group(function () {
     Route::get('alphabet', [AlphabetController::class, 'index']);
     Route::get('numbers', [NumberController::class, 'index']);
     Route::get('colors', [ColorController::class, 'index']);
+    Route::get('child/progress', [App\Http\Controllers\Api\ProgressController::class, 'index']);
     Route::post('progress', [ProgressController::class, 'store']);
 });

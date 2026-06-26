@@ -9,6 +9,21 @@ use Illuminate\Http\Request;
 
 class ProgressController extends Controller
 {
+    public function index(Request $request)
+{
+    $child = $request->user()->child;
+    $progress = Progress::where('child_id', $child->id)
+        ->where('completed', true)
+        ->selectRaw('content_type, count(*) as count')
+        ->groupBy('content_type')
+        ->pluck('count', 'content_type');
+
+    return response()->json([
+        'alphabet' => $progress['alphabet'] ?? 0,
+        'number'   => $progress['number'] ?? 0,
+        'color'    => $progress['color'] ?? 0,
+    ]);
+}
     public function store(Request $request)
     {
         $request->validate([
