@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { getColors, saveProgress } from "../../services/api";
+import api from "../../services/api";
 
-// Emoji map for colors (fallback if image_url is empty)
 const colorEmojis = {
   Rouge: "🍎",
   Bleu: "🌊",
@@ -18,23 +18,29 @@ const colorEmojis = {
 export default function Colors() {
   const { childId } = useParams();
   const navigate = useNavigate();
-  const [colors, setColors] = useState([]);
-  const [completedIds, setCompletedIds] = useState({});
-  const [justCompleted, setJustCompleted] = useState(null);
-  const [selectedColor, setSelectedColor] = useState(null);
   const { user } = useAuth();
 
+  const [colors, setColors] = useState([]);
+  const [completedIds, setCompletedIds] = useState({});
+  const [attempts, setAttempts] = useState({});
+  const [justCompleted, setJustCompleted] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
+
+  // Load colors + saved progress
   useEffect(() => {
     getColors().then((res) => {
       setColors(res.data);
       api
         .get("/progress/color")
         .then((progRes) => {
-          const saved = {};
+          const savedCompleted = {};
+          const savedAttempts = {};
           progRes.data.forEach((p) => {
-            if (p.completed) saved[p.content_id] = true;
+            savedAttempts[p.content_id] = p.attempts;
+            if (p.completed) savedCompleted[p.content_id] = true;
           });
-          setCompletedIds(saved);
+          setCompletedIds(savedCompleted);
+          setAttempts(savedAttempts);
         })
         .catch(() => {});
     });
@@ -45,21 +51,28 @@ export default function Colors() {
       const audio = new Audio(`http://localhost:8000${soundUrl}`);
       audio.play();
     } catch {
-      // Sound file not yet uploaded – silent fallback
+      // silent fallback
     }
   };
 
+  // Open the popup only – NO sound, NO progress
   const handleClick = (color) => {
-    // Open popup
     setSelectedColor(color);
+  };
+
+  // Called ONLY from the pop-up sound button
+  const handleListenInPopup = (color) => {
+    playSound(color.sound_url);
 
     if (completedIds[color.id]) return;
 
-    playSound(color.sound_url);
+    const newAttempts = { ...attempts };
+    newAttempts[color.id] = (newAttempts[color.id] || 0) + 1;
+    setAttempts(newAttempts);
+
     saveProgress("color", color.id);
 
-    // Color learned on first correct identification (RG5)
-    if (!completedIds[color.id]) {
+    if (newAttempts[color.id] >= 3) {
       setCompletedIds((prev) => ({ ...prev, [color.id]: true }));
       setJustCompleted(color.id);
       setTimeout(() => setJustCompleted(null), 1500);
@@ -113,17 +126,12 @@ export default function Colors() {
                   ✓
                 </div>
               )}
-              {justCompleted === color.id && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-2xl">
-                  <span className="text-3xl animate-bounce">🎉</span>
-                </div>
-              )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Popup Modal for selected color */}
+      {/* Popup Modal */}
       {selectedColor && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
@@ -133,7 +141,6 @@ export default function Colors() {
             className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center border border-[#E0E2E9] animate-bounce-in"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
             <button
               onClick={closePopup}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
@@ -141,35 +148,31 @@ export default function Colors() {
               ✕
             </button>
 
-            {/* Big color circle */}
             <div
               className="w-32 h-32 rounded-full mx-auto mb-6 shadow-xl border-8 border-white"
               style={{ backgroundColor: selectedColor.hex_code }}
             />
-
-            {/* Color name */}
             <div className="text-3xl font-extrabold text-[#181C21] mb-4">
               {selectedColor.name}
             </div>
-
-            {/* Emoji */}
             <div className="text-7xl mb-6">{getEmoji(selectedColor)}</div>
 
-            {/* Sound button */}
+            {/* The ONLY button that counts an attempt */}
             <button
-              onClick={() => playSound(selectedColor.sound_url)}
+              onClick={() => handleListenInPopup(selectedColor)}
               className="bg-gradient-to-r from-[#4DABF7] to-[#9C7AFF] text-white font-bold px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition transform hover:scale-105 text-xl flex items-center gap-2 mx-auto"
             >
               🔊 Écouter le son
             </button>
 
-            {/* Progress info */}
+            {/* Progress info – shows attempts or completed */}
             <div className="mt-4 text-sm text-gray-500">
               {completedIds[selectedColor.id]
                 ? "✅ Couleur apprise !"
-                : "Clique pour apprendre cette couleur"}
+                : `Clics : ${attempts[selectedColor.id] || 0} / 3`}
             </div>
 
+            {/* Celebration */}
             {justCompleted === selectedColor.id && (
               <div className="mt-2 text-2xl animate-bounce">🎉 Bravo !</div>
             )}
@@ -177,7 +180,6 @@ export default function Colors() {
         </div>
       )}
 
-      {/* Simple bounce animation for the popup */}
       <style>{`
         @keyframes bounce-in {
           0% { transform: scale(0.3); opacity: 0; }

@@ -14,61 +14,70 @@ const letterEmojis = {
 export default function Alphabet() {
   const { childId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [letters, setLetters] = useState([]);
   const [completedIds, setCompletedIds] = useState({});
   const [attempts, setAttempts] = useState({});
   const [selectedLetter, setSelectedLetter] = useState(null);
-  const { user } = useAuth();
+  const [justCompleted, setJustCompleted] = useState(null);
 
+  // Load letters + saved progress
   useEffect(() => {
-  getAlphabet().then((res) => {
-    setLetters(res.data);
-    // Load saved progress for alphabet
-    api.get('/progress/alphabet')
-      .then(progRes => {
-        const savedAttempts = {};
-        const savedCompleted = {};
-        progRes.data.forEach(p => {
-          savedAttempts[p.content_id] = p.attempts;
-          if (p.completed) savedCompleted[p.content_id] = true;
-        });
-        setAttempts(savedAttempts);
-        setCompletedIds(savedCompleted);
-      })
-      .catch(() => {});
-  });
-}, []);
+    getAlphabet().then((res) => {
+      setLetters(res.data);
+      api.get('/progress/alphabet')
+        .then(progRes => {
+          const savedAttempts = {};
+          const savedCompleted = {};
+          progRes.data.forEach(p => {
+            savedAttempts[p.content_id] = p.attempts;
+            if (p.completed) savedCompleted[p.content_id] = true;
+          });
+          setAttempts(savedAttempts);
+          setCompletedIds(savedCompleted);
+        })
+        .catch(() => {});
+    });
+  }, []);
 
   const playSound = (soundUrl) => {
     try {
       const audio = new Audio(`http://localhost:8000${soundUrl}`);
       audio.play();
     } catch {
-      // Sound file not yet uploaded – silent fallback
+      // silent fallback
     }
   };
 
+  // Open popup only – NO sound, NO progress
   const handleClick = (letter) => {
-    // Open popup
     setSelectedLetter(letter);
+  };
+
+  // Called only from the pop-up sound button
+  const handleListenInPopup = (letter) => {
+    playSound(letter.sound_url);
 
     if (completedIds[letter.id]) return;
 
-    // Increment local attempts
     const newAttempts = { ...attempts };
     newAttempts[letter.id] = (newAttempts[letter.id] || 0) + 1;
     setAttempts(newAttempts);
 
-    // Save to backend
     saveProgress('alphabet', letter.id);
 
-    // Mark completed after 3 attempts (RG3)
     if (newAttempts[letter.id] >= 3) {
       setCompletedIds((prev) => ({ ...prev, [letter.id]: true }));
+      setJustCompleted(letter.id);
+      setTimeout(() => setJustCompleted(null), 1500);
     }
   };
 
-  const closePopup = () => setSelectedLetter(null);
+  const closePopup = () => {
+    setSelectedLetter(null);
+    setJustCompleted(null);
+  };
 
   const getEmoji = (letter) => {
     return letterEmojis[letter.letter_uppercase] || '📖';
@@ -114,7 +123,7 @@ export default function Alphabet() {
         </div>
       </div>
 
-      {/* Popup Modal for selected letter */}
+      {/* Popup Modal */}
       {selectedLetter && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
@@ -124,7 +133,6 @@ export default function Alphabet() {
             className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center border border-[#E0E2E9] animate-bounce-in"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
             <button
               onClick={closePopup}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
@@ -132,25 +140,20 @@ export default function Alphabet() {
               ✕
             </button>
 
-            {/* Big letter */}
             <div className="text-8xl font-extrabold text-[#00639C] mb-2">
               {selectedLetter.letter_uppercase}
             </div>
             <div className="text-5xl text-gray-400 mb-4">
               {selectedLetter.letter_lowercase}
             </div>
-
-            {/* Emoji */}
             <div className="text-7xl mb-4">{getEmoji(selectedLetter)}</div>
-
-            {/* Word */}
             <div className="text-2xl font-bold text-[#181C21] mb-6">
               {selectedLetter.example_word}
             </div>
 
-            {/* Sound button */}
+            {/* Sound button – the ONLY way to count an attempt */}
             <button
-              onClick={() => playSound(selectedLetter.sound_url)}
+              onClick={() => handleListenInPopup(selectedLetter)}
               className="bg-gradient-to-r from-[#4DABF7] to-[#9C7AFF] text-white font-bold px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition transform hover:scale-105 text-xl flex items-center gap-2 mx-auto"
             >
               🔊 Écouter le son
@@ -162,11 +165,14 @@ export default function Alphabet() {
                 ? '✅ Lettre apprise !'
                 : `Clics : ${attempts[selectedLetter.id] || 0} / 3`}
             </div>
+
+            {justCompleted === selectedLetter.id && (
+              <div className="mt-2 text-2xl animate-bounce">🎉 Bravo !</div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Simple bounce animation for the popup */}
       <style>{`
         @keyframes bounce-in {
           0% { transform: scale(0.3); opacity: 0; }
