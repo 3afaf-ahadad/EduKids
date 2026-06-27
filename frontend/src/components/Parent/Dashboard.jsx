@@ -7,6 +7,7 @@ import {
 } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import Logo from "../Common/Logo";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -181,12 +182,12 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-[#F7F9FF] to-[#E8F0F8] font-['Nunito',sans-serif]">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-[#E0E2E9] px-6 py-4 flex flex-wrap justify-between items-center">
-        <div>
-          <p className="text-sm text-[#404751]">Bon retour</p>
-          <h1 className="text-2xl font-bold text-[#00639C]">
-            Bonjour {user?.name || "Sophie"}
-          </h1>
-        </div>
+        <div className="flex flex-col items-start">
+            <Logo size="text-4xl" />
+            <p className="text-[#404751] text-lg mt-1">
+              Bonjour {user.name} !
+            </p>
+          </div>
         <button
           onClick={handleLogout}
           className="bg-white border border-[#E0E2E9] text-[#404751] px-5 py-2 rounded-full hover:bg-gray-50 transition shadow-sm"
