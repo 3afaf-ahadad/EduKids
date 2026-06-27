@@ -19,21 +19,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
- const login = async (email, password) => {
+const login = async (email, password) => {
   const response = await apiLogin({ email, password });
-  const token = response.data.token;
+  const { user, token } = response.data;
   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  localStorage.setItem('auth_token', token);  // ← add this
-  await fetchUser();
+  localStorage.setItem('auth_token', token);
+  setUser(user);
 };
 
-  const logout = async () => {
+ const logout = async () => {
   await apiLogout();
   delete api.defaults.headers.common['Authorization'];
-  localStorage.removeItem('auth_token');  // ← add this
+  localStorage.removeItem('auth_token');
   setUser(null);
+  setLoading(false);
 };
-
   useEffect(() => {
     fetchUser();
   }, []);
