@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
+import Logo from "../Common/Logo";
 
 export default function Modules() {
   const { childId } = useParams();
@@ -15,18 +16,21 @@ export default function Modules() {
   });
 
   useEffect(() => {
-  if (!child) return;
+    if (!child) return;
 
-  let cancelled = false;
+    let cancelled = false;
 
-  api.get('/child/progress')
-    .then((res) => {
-      if (!cancelled) setProgress(res.data);
-    })
-    .catch(() => {});
+    api
+      .get("/child/progress")
+      .then((res) => {
+        if (!cancelled) setProgress(res.data);
+      })
+      .catch(() => {});
 
-  return () => { cancelled = true; };
-}, [child]);
+    return () => {
+      cancelled = true;
+    };
+  }, [child]);
 
   if (!child) {
     return (
@@ -44,14 +48,16 @@ export default function Modules() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F0FDF4] via-[#E0F2FE] to-[#FDF4FF] font-['Nunito',sans-serif] p-6">
       <div className="container mx-auto max-w-4xl">
-        <div className="flex justify-between items-center mb-8">
-          <div className="text-center flex-1">
-            <h1 className="text-4xl font-extrabold text-[#00639C]">EduKids</h1>
-            <p className="text-[#404751] text-lg">Bonjour {child.name} !</p>
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex flex-col items-start">
+            <Logo size="text-4xl" />
+            <p className="text-[#404751] text-lg mt-1">
+              Bonjour {child.name} !
+            </p>
           </div>
           <button
             onClick={handleLogout}
-            className="bg-white border border-[#E0E2E9] text-[#404751] px-5 py-2 rounded-full hover:bg-gray-50 transition shadow-sm"
+            className="bg-white border border-[#E0E2E9] text-[#404751] px-5 py-2 rounded-full hover:bg-gray-50 transition shadow-sm whitespace-nowrap"
           >
             Se déconnecter
           </button>
