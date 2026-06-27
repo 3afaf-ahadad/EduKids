@@ -1,7 +1,7 @@
-// src/components/Auth/Register.jsx
 import { useState } from "react";
 import api from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+import Logo from "../Common/Logo";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function Register() {
@@ -53,27 +53,10 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FEFEFE] to-[#E8F0F8] flex items-center justify-center p-4 font-['Quicksand','Comic_Neue',sans-serif]">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 md:p-8 transition-all duration-300">
-        {/* Icône utilisateur */}
         <div className="flex justify-center mb-5">
-          <div className="bg-gradient-to-br from-[#CEE5FF] to-[#E8DDFF] rounded-full p-3 shadow-md">
-            <svg
-              className="w-8 h-8 text-[#00639C]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-          </div>
+          <Logo size="text-5xl" />
         </div>
-
-        {/* Titres */}
-        <h2 className="text-3xl font-extrabold text-center text-[#00639C] tracking-tight">
+        <h2 className="text-3xl font-extrabold text-center text-[#00639C] tracking-tight mt-4">
           Inscription Parent
         </h2>
         <p className="text-center text-gray-500 mt-1 mb-6 text-base">
