@@ -136,7 +136,7 @@ export default function Numbers() {
           </div>
           <div className="text-3xl text-gray-500 mb-4">{current.word}</div>
           <div
-            className={`text-5xl mb-6 transition-all duration-300 ${animating ? "scale-110" : ""}`}
+            className={`text-5xl mb-6 transition-all duration-300 max-w-full break-words ${animating ? "scale-110" : ""}`}
           >
             {numberEmojis[current.value]}
           </div>
