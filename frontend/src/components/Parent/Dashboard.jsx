@@ -428,7 +428,7 @@ export default function Dashboard() {
                     >
                       {editingChild
                         ? "Enregistrer"
-                        : "Créer le compte enfant 🎁"}
+                        : "Créer le compte enfant"}
                     </button>
                   </div>
                 </form>
