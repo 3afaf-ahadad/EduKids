@@ -3,6 +3,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { getColors, saveProgress } from "../../services/api";
 import api from "../../services/api";
+import Logo from "../Common/Logo";
 
 const colorEmojis = {
   Rouge: "🍎",
@@ -26,37 +27,42 @@ export default function Colors() {
   const [justCompleted, setJustCompleted] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
 
- useEffect(() => {
-  let cancelled = false;
+  useEffect(() => {
+    let cancelled = false;
 
-  getColors().then((res) => {
-    if (cancelled) return;
-    setColors(res.data);
-    api.get('/progress/color')
-      .then(progRes => {
-        if (cancelled) return;
-        const savedAttempts = {};
-        const savedCompleted = {};
-        progRes.data.forEach(p => {
-          savedAttempts[p.content_id] = p.attempts;
-          if (p.completed) savedCompleted[p.content_id] = true;
-        });
-        setAttempts(savedAttempts);
-        setCompletedIds(savedCompleted);
-      })
-      .catch(() => {});
-  });
+    getColors().then((res) => {
+      if (cancelled) return;
+      setColors(res.data);
+      api
+        .get("/progress/color")
+        .then((progRes) => {
+          if (cancelled) return;
+          const savedAttempts = {};
+          const savedCompleted = {};
+          progRes.data.forEach((p) => {
+            savedAttempts[p.content_id] = p.attempts;
+            if (p.completed) savedCompleted[p.content_id] = true;
+          });
+          setAttempts(savedAttempts);
+          setCompletedIds(savedCompleted);
+        })
+        .catch(() => {});
+    });
 
-  return () => { cancelled = true; };
-}, []);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const audioCache = {};
 
   const playSound = (soundUrl) => {
-    try {
-      const audio = new Audio(`http://localhost:8000${soundUrl}`);
-      audio.play();
-    } catch {
-      // silent fallback
+    if (!audioCache[soundUrl]) {
+      audioCache[soundUrl] = new Audio(soundUrl);
     }
+    const audio = audioCache[soundUrl];
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
   };
 
   // Open the popup only – NO sound, NO progress
@@ -99,9 +105,9 @@ export default function Colors() {
           >
             ← Retour
           </button>
-          <span className="text-sm text-gray-500">
-            Bonjour {user?.child?.name}
-          </span>
+          <div className="flex flex-col items-start">
+            <Logo size="text-4xl" />
+          </div>
           <h1 className="text-3xl font-extrabold text-[#DB980F]">Couleurs</h1>
         </div>
 

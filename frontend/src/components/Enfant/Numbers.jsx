@@ -3,11 +3,19 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { getNumbers, saveProgress } from "../../services/api";
 import api from "../../services/api";
+import Logo from "../Common/Logo";
 
 const numberEmojis = {
-  1: "⭐", 2: "⭐⭐", 3: "⭐⭐⭐", 4: "⭐⭐⭐⭐", 5: "⭐⭐⭐⭐⭐",
-  6: "⭐⭐⭐⭐⭐⭐", 7: "⭐⭐⭐⭐⭐⭐⭐", 8: "⭐⭐⭐⭐⭐⭐⭐⭐",
-  9: "⭐⭐⭐⭐⭐⭐⭐⭐⭐", 10: "⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐",
+  1: "⭐",
+  2: "⭐⭐",
+  3: "⭐⭐⭐",
+  4: "⭐⭐⭐⭐",
+  5: "⭐⭐⭐⭐⭐",
+  6: "⭐⭐⭐⭐⭐⭐",
+  7: "⭐⭐⭐⭐⭐⭐⭐",
+  8: "⭐⭐⭐⭐⭐⭐⭐⭐",
+  9: "⭐⭐⭐⭐⭐⭐⭐⭐⭐",
+  10: "⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐",
 };
 
 export default function Numbers() {
@@ -23,28 +31,31 @@ export default function Numbers() {
   const [animating, setAnimating] = useState(false);
 
   useEffect(() => {
-  let cancelled = false;
+    let cancelled = false;
 
-  getNumbers().then((res) => {
-    if (cancelled) return;
-    setNumbers(res.data);
-    api.get('/progress/number')
-      .then(progRes => {
-        if (cancelled) return;
-        const savedAttempts = {};
-        const savedCompleted = {};
-        progRes.data.forEach(p => {
-          savedAttempts[p.content_id] = p.attempts;
-          if (p.completed) savedCompleted[p.content_id] = true;
-        });
-        setAttempts(savedAttempts);
-        setCompletedIds(savedCompleted);
-      })
-      .catch(() => {});
-  });
+    getNumbers().then((res) => {
+      if (cancelled) return;
+      setNumbers(res.data);
+      api
+        .get("/progress/number")
+        .then((progRes) => {
+          if (cancelled) return;
+          const savedAttempts = {};
+          const savedCompleted = {};
+          progRes.data.forEach((p) => {
+            savedAttempts[p.content_id] = p.attempts;
+            if (p.completed) savedCompleted[p.content_id] = true;
+          });
+          setAttempts(savedAttempts);
+          setCompletedIds(savedCompleted);
+        })
+        .catch(() => {});
+    });
 
-  return () => { cancelled = true; };
-}, []);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Animation trigger when current index changes
   useEffect(() => {
@@ -55,9 +66,15 @@ export default function Numbers() {
     }
   }, [currentIndex, numbers]);
 
+  const audioCache = {};
+
   const playSound = (soundUrl) => {
-    const audio = new Audio(`http://localhost:8000${soundUrl}`);
-    audio.play();
+    if (!audioCache[soundUrl]) {
+      audioCache[soundUrl] = new Audio(soundUrl);
+    }
+    const audio = audioCache[soundUrl];
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
   };
 
   // Called when "Écouter" is clicked – only this counts an attempt
@@ -105,9 +122,9 @@ export default function Numbers() {
           >
             ← Retour
           </button>
-          <span className="text-sm text-gray-500">
-            Bonjour {user?.child?.name}
-          </span>
+          <div className="flex flex-col items-start">
+            <Logo size="text-4xl" />
+          </div>
           <h1 className="text-3xl font-extrabold text-[#6844C8]">Nombres</h1>
         </div>
 
@@ -127,7 +144,7 @@ export default function Numbers() {
           {/* Progress info */}
           <div className="text-sm text-gray-500 mb-4">
             {completedIds[current.id]
-              ? '✅ Nombre appris !'
+              ? "✅ Nombre appris !"
               : `Clics : ${currentAttempts} / 3`}
           </div>
 

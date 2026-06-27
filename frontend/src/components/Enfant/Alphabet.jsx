@@ -1,14 +1,37 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getAlphabet, saveProgress } from '../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
-import api from '../../services/api';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getAlphabet, saveProgress } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
+import api from "../../services/api";
+import Logo from "../Common/Logo";
 
 const letterEmojis = {
-  A: '🍎', B: '⚽', C: '🐱', D: '🐬', E: '🐘', F: '🌸', G: '🐸',
-  H: '🦉', I: '🏔️', J: '🧸', K: '🥝', L: '🦁', M: '🏠',
-  N: '☁️', O: '🐦', P: '🍎', Q: '🎳', R: '🤖', S: '☀️',
-  T: '🐢', U: '🏭', V: '🚗', W: '🚃', X: '🎵', Y: '🥛', Z: '🦓',
+  A: "🍎",
+  B: "⚽",
+  C: "🐱",
+  D: "🐬",
+  E: "🐘",
+  F: "🌸",
+  G: "🐸",
+  H: "🦉",
+  I: "🏔️",
+  J: "🧸",
+  K: "🥝",
+  L: "🦁",
+  M: "🏠",
+  N: "☁️",
+  O: "🐦",
+  P: "🍎",
+  Q: "🎳",
+  R: "🤖",
+  S: "☀️",
+  T: "🐢",
+  U: "🏭",
+  V: "🚗",
+  W: "🚃",
+  X: "🎵",
+  Y: "🥛",
+  Z: "🦓",
 };
 
 export default function Alphabet() {
@@ -23,36 +46,41 @@ export default function Alphabet() {
   const [justCompleted, setJustCompleted] = useState(null);
 
   useEffect(() => {
-  let cancelled = false;
+    let cancelled = false;
 
-  getAlphabet().then((res) => {
-    if (cancelled) return;
-    setLetters(res.data);
-    api.get('/progress/alphabet')
-      .then(progRes => {
-        if (cancelled) return;
-        const savedAttempts = {};
-        const savedCompleted = {};
-        progRes.data.forEach(p => {
-          savedAttempts[p.content_id] = p.attempts;
-          if (p.completed) savedCompleted[p.content_id] = true;
-        });
-        setAttempts(savedAttempts);
-        setCompletedIds(savedCompleted);
-      })
-      .catch(() => {});
-  });
+    getAlphabet().then((res) => {
+      if (cancelled) return;
+      setLetters(res.data);
+      api
+        .get("/progress/alphabet")
+        .then((progRes) => {
+          if (cancelled) return;
+          const savedAttempts = {};
+          const savedCompleted = {};
+          progRes.data.forEach((p) => {
+            savedAttempts[p.content_id] = p.attempts;
+            if (p.completed) savedCompleted[p.content_id] = true;
+          });
+          setAttempts(savedAttempts);
+          setCompletedIds(savedCompleted);
+        })
+        .catch(() => {});
+    });
 
-  return () => { cancelled = true; };
-}, []);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const audioCache = {};
 
   const playSound = (soundUrl) => {
-    try {
-      const audio = new Audio(`http://localhost:8000${soundUrl}`);
-      audio.play();
-    } catch {
-      // silent fallback
+    if (!audioCache[soundUrl]) {
+      audioCache[soundUrl] = new Audio(soundUrl);
     }
+    const audio = audioCache[soundUrl];
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
   };
 
   // Open popup only – NO sound, NO progress
@@ -70,7 +98,7 @@ export default function Alphabet() {
     newAttempts[letter.id] = (newAttempts[letter.id] || 0) + 1;
     setAttempts(newAttempts);
 
-    saveProgress('alphabet', letter.id);
+    saveProgress("alphabet", letter.id);
 
     if (newAttempts[letter.id] >= 3) {
       setCompletedIds((prev) => ({ ...prev, [letter.id]: true }));
@@ -85,7 +113,7 @@ export default function Alphabet() {
   };
 
   const getEmoji = (letter) => {
-    return letterEmojis[letter.letter_uppercase] || '📖';
+    return letterEmojis[letter.letter_uppercase] || "📖";
   };
 
   return (
@@ -98,7 +126,9 @@ export default function Alphabet() {
           >
             ← Retour
           </button>
-          <span className="text-sm text-gray-500">Bonjour {user?.child?.name}</span>
+          <div className="flex flex-col items-start">
+            <Logo size="text-4xl" />
+          </div>
           <h1 className="text-3xl font-extrabold text-[#00639C]">Alphabet</h1>
         </div>
 
@@ -110,18 +140,24 @@ export default function Alphabet() {
               onClick={() => handleClick(letter)}
               className={`relative bg-white rounded-2xl p-4 text-center shadow-md hover:shadow-xl transition transform hover:scale-105 border-2 ${
                 completedIds[letter.id]
-                  ? 'border-green-400 bg-green-50'
-                  : 'border-[#E0E2E9]'
+                  ? "border-green-400 bg-green-50"
+                  : "border-[#E0E2E9]"
               }`}
             >
               <div className="text-3xl font-extrabold text-[#181C21]">
                 {letter.letter_uppercase}
               </div>
-              <div className="text-xl text-gray-400">{letter.letter_lowercase}</div>
+              <div className="text-xl text-gray-400">
+                {letter.letter_lowercase}
+              </div>
               <div className="text-4xl mt-2">{getEmoji(letter)}</div>
-              <div className="text-xs text-gray-500 mt-1">{letter.example_word}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {letter.example_word}
+              </div>
               {completedIds[letter.id] && (
-                <div className="absolute top-1 right-1 text-green-500 text-xl">✓</div>
+                <div className="absolute top-1 right-1 text-green-500 text-xl">
+                  ✓
+                </div>
               )}
             </button>
           ))}
@@ -167,7 +203,7 @@ export default function Alphabet() {
             {/* Progress info */}
             <div className="mt-4 text-sm text-gray-500">
               {completedIds[selectedLetter.id]
-                ? '✅ Lettre apprise !'
+                ? "✅ Lettre apprise !"
                 : `Clics : ${attempts[selectedLetter.id] || 0} / 3`}
             </div>
 
