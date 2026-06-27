@@ -23,7 +23,7 @@ export default function Login() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#F7F9FF] font-['Nunito',sans-serif] flex items-center justify-center p-6">
-      {/* Bulles décoratives floutées (exactement comme sur la maquette) */}
+      {/* Bulles décoratives floutées */}
       <div className="absolute left-[-5%] right-[65%] top-[-10%] bottom-[60%] bg-[#CEE5FF] mix-blend-multiply opacity-40 blur-[32px] rounded-full" />
       <div className="absolute left-[55%] right-[-5%] top-[47.5%] bottom-[-10%] bg-[#E8DDFF] mix-blend-multiply opacity-40 blur-[32px] rounded-full" />
       <div className="absolute left-[65%] right-[10%] top-[20%] bottom-[48.75%] bg-[#FFDDAF] mix-blend-multiply opacity-30 blur-[32px] rounded-full" />
