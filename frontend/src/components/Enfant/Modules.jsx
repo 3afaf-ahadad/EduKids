@@ -15,13 +15,18 @@ export default function Modules() {
   });
 
   useEffect(() => {
-    if (child) {
-      api
-        .get("/child/progress")
-        .then((res) => setProgress(res.data))
-        .catch(() => {});
-    }
-  }, [child]);
+  if (!child) return;
+
+  let cancelled = false;
+
+  api.get('/child/progress')
+    .then((res) => {
+      if (!cancelled) setProgress(res.data);
+    })
+    .catch(() => {});
+
+  return () => { cancelled = true; };
+}, [child]);
 
   if (!child) {
     return (

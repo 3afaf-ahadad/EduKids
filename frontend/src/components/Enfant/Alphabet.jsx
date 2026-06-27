@@ -22,24 +22,29 @@ export default function Alphabet() {
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [justCompleted, setJustCompleted] = useState(null);
 
-  // Load letters + saved progress
   useEffect(() => {
-    getAlphabet().then((res) => {
-      setLetters(res.data);
-      api.get('/progress/alphabet')
-        .then(progRes => {
-          const savedAttempts = {};
-          const savedCompleted = {};
-          progRes.data.forEach(p => {
-            savedAttempts[p.content_id] = p.attempts;
-            if (p.completed) savedCompleted[p.content_id] = true;
-          });
-          setAttempts(savedAttempts);
-          setCompletedIds(savedCompleted);
-        })
-        .catch(() => {});
-    });
-  }, []);
+  let cancelled = false;
+
+  getAlphabet().then((res) => {
+    if (cancelled) return;
+    setLetters(res.data);
+    api.get('/progress/alphabet')
+      .then(progRes => {
+        if (cancelled) return;
+        const savedAttempts = {};
+        const savedCompleted = {};
+        progRes.data.forEach(p => {
+          savedAttempts[p.content_id] = p.attempts;
+          if (p.completed) savedCompleted[p.content_id] = true;
+        });
+        setAttempts(savedAttempts);
+        setCompletedIds(savedCompleted);
+      })
+      .catch(() => {});
+  });
+
+  return () => { cancelled = true; };
+}, []);
 
   const playSound = (soundUrl) => {
     try {

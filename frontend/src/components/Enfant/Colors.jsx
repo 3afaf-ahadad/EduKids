@@ -26,25 +26,29 @@ export default function Colors() {
   const [justCompleted, setJustCompleted] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
 
-  // Load colors + saved progress
-  useEffect(() => {
-    getColors().then((res) => {
-      setColors(res.data);
-      api
-        .get("/progress/color")
-        .then((progRes) => {
-          const savedCompleted = {};
-          const savedAttempts = {};
-          progRes.data.forEach((p) => {
-            savedAttempts[p.content_id] = p.attempts;
-            if (p.completed) savedCompleted[p.content_id] = true;
-          });
-          setCompletedIds(savedCompleted);
-          setAttempts(savedAttempts);
-        })
-        .catch(() => {});
-    });
-  }, []);
+ useEffect(() => {
+  let cancelled = false;
+
+  getColors().then((res) => {
+    if (cancelled) return;
+    setColors(res.data);
+    api.get('/progress/color')
+      .then(progRes => {
+        if (cancelled) return;
+        const savedAttempts = {};
+        const savedCompleted = {};
+        progRes.data.forEach(p => {
+          savedAttempts[p.content_id] = p.attempts;
+          if (p.completed) savedCompleted[p.content_id] = true;
+        });
+        setAttempts(savedAttempts);
+        setCompletedIds(savedCompleted);
+      })
+      .catch(() => {});
+  });
+
+  return () => { cancelled = true; };
+}, []);
 
   const playSound = (soundUrl) => {
     try {

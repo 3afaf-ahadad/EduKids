@@ -22,24 +22,29 @@ export default function Numbers() {
   const [justCompleted, setJustCompleted] = useState(false);
   const [animating, setAnimating] = useState(false);
 
-  // Load numbers + saved progress
   useEffect(() => {
-    getNumbers().then((res) => {
-      setNumbers(res.data);
-      api.get("/progress/number")
-        .then((progRes) => {
-          const savedAttempts = {};
-          const savedCompleted = {};
-          progRes.data.forEach((p) => {
-            savedAttempts[p.content_id] = p.attempts;
-            if (p.completed) savedCompleted[p.content_id] = true;
-          });
-          setAttempts(savedAttempts);
-          setCompletedIds(savedCompleted);
-        })
-        .catch(() => {});
-    });
-  }, []);
+  let cancelled = false;
+
+  getNumbers().then((res) => {
+    if (cancelled) return;
+    setNumbers(res.data);
+    api.get('/progress/number')
+      .then(progRes => {
+        if (cancelled) return;
+        const savedAttempts = {};
+        const savedCompleted = {};
+        progRes.data.forEach(p => {
+          savedAttempts[p.content_id] = p.attempts;
+          if (p.completed) savedCompleted[p.content_id] = true;
+        });
+        setAttempts(savedAttempts);
+        setCompletedIds(savedCompleted);
+      })
+      .catch(() => {});
+  });
+
+  return () => { cancelled = true; };
+}, []);
 
   // Animation trigger when current index changes
   useEffect(() => {
