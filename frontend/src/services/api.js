@@ -22,11 +22,16 @@ function getCookie(name) {
   return null;
 }
 
+let csrfPromise = null;
+
 api.interceptors.request.use(async (config) => {
   if (["post", "put", "patch", "delete"].includes(config.method)) {
-    await axios.get("http://localhost:8000/sanctum/csrf-cookie", {
-      withCredentials: true,
-    });
+    if (!csrfPromise) {
+      csrfPromise = axios.get("http://localhost:8000/sanctum/csrf-cookie", {
+        withCredentials: true,
+      });
+    }
+    await csrfPromise;
     const xsrfToken = getCookie("XSRF-TOKEN");
     if (xsrfToken) {
       config.headers["X-XSRF-TOKEN"] = xsrfToken;

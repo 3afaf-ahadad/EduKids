@@ -20,8 +20,49 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+  let cancelled = false;
+
+  const fetchData = async () => {
+    try {
+      const res = await getDashboardStats();
+      if (cancelled) return;
+      const stats = res.data;
+      const mapped = stats.map((child) => ({
+        ...child,
+        prog: {
+          alphabet_completed: child.progress.alphabet.completed,
+          alphabet_total: child.progress.alphabet.total,
+          alphabet_percentage: Math.round(
+            (child.progress.alphabet.completed /
+              child.progress.alphabet.total) *
+              100,
+          ),
+          numbers_completed: child.progress.numbers.completed,
+          numbers_total: child.progress.numbers.total,
+          numbers_percentage: Math.round(
+            (child.progress.numbers.completed / child.progress.numbers.total) *
+              100,
+          ),
+          colors_completed: child.progress.colors.completed,
+          colors_total: child.progress.colors.total,
+          colors_percentage: Math.round(
+            (child.progress.colors.completed / child.progress.colors.total) *
+              100,
+          ),
+        },
+      }));
+      if (!cancelled) setChildren(mapped);
+    } catch (err) {
+      if (!cancelled) {
+        console.error("Erreur chargement :", err);
+        setError("Impossible de charger le tableau de bord.");
+      }
+    }
+  };
+
+  fetchData();
+  return () => { cancelled = true; };
+}, []);
 
   const fetchData = async () => {
     try {
