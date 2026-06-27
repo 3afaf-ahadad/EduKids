@@ -12,99 +12,70 @@ import Logo from "../Common/Logo";
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [limitReached, setLimitReached] = useState(false);
   const [children, setChildren] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [editingChild, setEditingChild] = useState(null); // null = add mode
+  const [editingChild, setEditingChild] = useState(null);
   const [formName, setFormName] = useState("");
   const [formAge, setFormAge] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-  let cancelled = false;
+    let cancelled = false;
 
-  const fetchData = async () => {
-    try {
-      const res = await getDashboardStats();
-      if (cancelled) return;
-      const stats = res.data;
-      const mapped = stats.map((child) => ({
-        ...child,
-        prog: {
-          alphabet_completed: child.progress.alphabet.completed,
-          alphabet_total: child.progress.alphabet.total,
-          alphabet_percentage: Math.round(
-            (child.progress.alphabet.completed /
-              child.progress.alphabet.total) *
-              100,
-          ),
-          numbers_completed: child.progress.numbers.completed,
-          numbers_total: child.progress.numbers.total,
-          numbers_percentage: Math.round(
-            (child.progress.numbers.completed / child.progress.numbers.total) *
-              100,
-          ),
-          colors_completed: child.progress.colors.completed,
-          colors_total: child.progress.colors.total,
-          colors_percentage: Math.round(
-            (child.progress.colors.completed / child.progress.colors.total) *
-              100,
-          ),
-        },
-      }));
-      if (!cancelled) setChildren(mapped);
-    } catch (err) {
-      if (!cancelled) {
-        console.error("Erreur chargement :", err);
-        setError("Impossible de charger le tableau de bord.");
+    const fetchData = async () => {
+      try {
+        const res = await getDashboardStats();
+        if (cancelled) return;
+        const stats = res.data;
+        const mapped = stats.map((child) => ({
+          ...child,
+          prog: {
+            alphabet_completed: child.progress.alphabet.completed,
+            alphabet_total: child.progress.alphabet.total,
+            alphabet_percentage: Math.round(
+              (child.progress.alphabet.completed /
+                child.progress.alphabet.total) *
+                100
+            ),
+            numbers_completed: child.progress.numbers.completed,
+            numbers_total: child.progress.numbers.total,
+            numbers_percentage: Math.round(
+              (child.progress.numbers.completed /
+                child.progress.numbers.total) *
+                100
+            ),
+            colors_completed: child.progress.colors.completed,
+            colors_total: child.progress.colors.total,
+            colors_percentage: Math.round(
+              (child.progress.colors.completed /
+                child.progress.colors.total) *
+                100
+            ),
+          },
+        }));
+        if (!cancelled) setChildren(mapped);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Erreur chargement :", err);
+          setError("Impossible de charger le tableau de bord.");
+        }
       }
-    }
-  };
+    };
 
-  fetchData();
-  return () => { cancelled = true; };
-}, []);
-
-  const fetchData = async () => {
-    try {
-      const res = await getDashboardStats();
-      const stats = res.data;
-      const mapped = stats.map((child) => ({
-        ...child,
-        prog: {
-          alphabet_completed: child.progress.alphabet.completed,
-          alphabet_total: child.progress.alphabet.total,
-          alphabet_percentage: Math.round(
-            (child.progress.alphabet.completed /
-              child.progress.alphabet.total) *
-              100,
-          ),
-          numbers_completed: child.progress.numbers.completed,
-          numbers_total: child.progress.numbers.total,
-          numbers_percentage: Math.round(
-            (child.progress.numbers.completed / child.progress.numbers.total) *
-              100,
-          ),
-          colors_completed: child.progress.colors.completed,
-          colors_total: child.progress.colors.total,
-          colors_percentage: Math.round(
-            (child.progress.colors.completed / child.progress.colors.total) *
-              100,
-          ),
-        },
-      }));
-      setChildren(mapped);
-    } catch (err) {
-      console.error("Erreur chargement :", err);
-      setError("Impossible de charger le tableau de bord.");
-    }
-  };
+    fetchData();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const openAddModal = () => {
     setEditingChild(null);
     setFormName("");
     setFormAge("");
     setCreatedCredentials(null);
+    setLimitReached(false);
     setShowModal(true);
   };
 
@@ -112,6 +83,8 @@ export default function Dashboard() {
     setEditingChild(child);
     setFormName(child.name);
     setFormAge(child.age ? String(child.age) : "");
+    setCreatedCredentials(null);
+    setLimitReached(false);
     setShowModal(true);
   };
 
@@ -120,6 +93,7 @@ export default function Dashboard() {
     setEditingChild(null);
     setFormName("");
     setFormAge("");
+    setLimitReached(false);
   };
 
   const handleSubmit = async (e) => {
@@ -135,23 +109,42 @@ export default function Dashboard() {
         });
       } else {
         const res = await createChild({ name: formName, age: formAge || null });
-        // Store credentials to show them
         setCreatedCredentials({
           childName: formName,
           email: res.data.email,
           password: res.data.password,
         });
-        // Don't close the modal yet – we'll show the credentials first
-        return;
+        return; // stay in modal to show credentials
       }
       closeModal();
-      fetchData();
+      // refresh the list
+      const refresh = await getDashboardStats();
+      const mapped = refresh.data.map((child) => ({
+        ...child,
+        prog: {
+          alphabet_completed: child.progress.alphabet.completed,
+          alphabet_total: child.progress.alphabet.total,
+          alphabet_percentage: Math.round(
+            (child.progress.alphabet.completed / child.progress.alphabet.total) * 100
+          ),
+          numbers_completed: child.progress.numbers.completed,
+          numbers_total: child.progress.numbers.total,
+          numbers_percentage: Math.round(
+            (child.progress.numbers.completed / child.progress.numbers.total) * 100
+          ),
+          colors_completed: child.progress.colors.completed,
+          colors_total: child.progress.colors.total,
+          colors_percentage: Math.round(
+            (child.progress.colors.completed / child.progress.colors.total) * 100
+          ),
+        },
+      }));
+      setChildren(mapped);
     } catch (err) {
       console.error("Erreur :", err);
       if (err.response?.status === 422) {
-        setError(
-          err.response.data.message || "Données invalides ou limite atteinte.",
-        );
+        // Show friendly limit message inside the modal
+        setLimitReached(true);
       } else {
         setError("Opération échouée.");
       }
@@ -161,13 +154,34 @@ export default function Dashboard() {
   const handleDelete = async (id) => {
     if (
       !window.confirm(
-        "Supprimer cet enfant ? Toute sa progression sera perdue.",
+        "Supprimer cet enfant ? Toute sa progression sera perdue."
       )
     )
       return;
     try {
       await deleteChild(id);
-      fetchData();
+      const refresh = await getDashboardStats();
+      const mapped = refresh.data.map((child) => ({
+        ...child,
+        prog: {
+          alphabet_completed: child.progress.alphabet.completed,
+          alphabet_total: child.progress.alphabet.total,
+          alphabet_percentage: Math.round(
+            (child.progress.alphabet.completed / child.progress.alphabet.total) * 100
+          ),
+          numbers_completed: child.progress.numbers.completed,
+          numbers_total: child.progress.numbers.total,
+          numbers_percentage: Math.round(
+            (child.progress.numbers.completed / child.progress.numbers.total) * 100
+          ),
+          colors_completed: child.progress.colors.completed,
+          colors_total: child.progress.colors.total,
+          colors_percentage: Math.round(
+            (child.progress.colors.completed / child.progress.colors.total) * 100
+          ),
+        },
+      }));
+      setChildren(mapped);
     } catch (err) {
       setError("Impossible de supprimer l'enfant.");
     }
@@ -183,11 +197,9 @@ export default function Dashboard() {
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-[#E0E2E9] px-6 py-4 flex flex-wrap justify-between items-center">
         <div className="flex flex-col items-start">
-            <Logo size="text-4xl" />
-            <p className="text-[#404751] text-lg mt-1">
-              Bonjour {user.name} !
-            </p>
-          </div>
+          <Logo size="text-4xl" />
+          <p className="text-[#404751] text-lg mt-1">Bonjour {user.name} !</p>
+        </div>
         <button
           onClick={handleLogout}
           className="bg-white border border-[#E0E2E9] text-[#404751] px-5 py-2 rounded-full hover:bg-gray-50 transition shadow-sm"
@@ -272,9 +284,7 @@ export default function Dashboard() {
                   </p>
                 </div>
 
-                {/* Progress cards unchanged */}
                 <div className="grid grid-cols-3 gap-4 mt-4">
-                  {/* ... (same as before) ... */}
                   <div className="bg-[#CEE5FF] bg-opacity-40 rounded-xl p-3 text-center">
                     <div className="text-sm font-semibold text-[#00639C]">
                       A-Z Alphabet
@@ -336,12 +346,28 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Modal (Add / Edit) */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-[#E0E2E9]">
-            {createdCredentials ? (
-              /* ── Credentials view (after creation) ── */
+            {limitReached ? (
+              /* ── Limit reached view ── */
+              <>
+                <h3 className="text-2xl font-bold text-[#00639C] mb-2">
+                  ⚠️ Limite atteinte
+                </h3>
+                <p className="text-[#404751] mb-6">
+                  Vous avez déjà 5 enfants dans votre compte. Supprimez un enfant existant avant d'en ajouter un nouveau.
+                </p>
+                <button
+                  onClick={() => setLimitReached(false)}
+                  className="w-full bg-[#4DABF7] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#3d9be0] transition"
+                >
+                  OK, j'ai compris
+                </button>
+              </>
+            ) : createdCredentials ? (
+              /* ── Credentials view ── */
               <>
                 <h3 className="text-2xl font-bold text-[#00639C] mb-2">
                   ✅ Compte créé !
@@ -362,7 +388,30 @@ export default function Dashboard() {
                   onClick={() => {
                     setCreatedCredentials(null);
                     closeModal();
-                    fetchData(); // ← now the list refreshes immediately
+                    // refresh list
+                    getDashboardStats().then((res) => {
+                      const mapped = res.data.map((child) => ({
+                        ...child,
+                        prog: {
+                          alphabet_completed: child.progress.alphabet.completed,
+                          alphabet_total: child.progress.alphabet.total,
+                          alphabet_percentage: Math.round(
+                            (child.progress.alphabet.completed / child.progress.alphabet.total) * 100
+                          ),
+                          numbers_completed: child.progress.numbers.completed,
+                          numbers_total: child.progress.numbers.total,
+                          numbers_percentage: Math.round(
+                            (child.progress.numbers.completed / child.progress.numbers.total) * 100
+                          ),
+                          colors_completed: child.progress.colors.completed,
+                          colors_total: child.progress.colors.total,
+                          colors_percentage: Math.round(
+                            (child.progress.colors.completed / child.progress.colors.total) * 100
+                          ),
+                        },
+                      }));
+                      setChildren(mapped);
+                    });
                   }}
                   className="w-full bg-[#4DABF7] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#3d9be0] transition"
                 >
@@ -370,7 +419,7 @@ export default function Dashboard() {
                 </button>
               </>
             ) : (
-              /* ── Form view (add / edit) ── */
+              /* ── Form view ── */
               <>
                 <h3 className="text-2xl font-bold text-[#00639C] mb-2">
                   {editingChild ? "Modifier l'enfant" : "Ajouter un enfant"}
