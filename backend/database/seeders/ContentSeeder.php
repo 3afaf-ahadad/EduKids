@@ -48,7 +48,7 @@ class ContentSeeder extends Seeder
             DB::table('colors')->insert([
                 'name'      => $c['name'],
                 'hex_code'  => $c['hex'],
-                'sound_url' => '/sounds/colors/' . $c['name'] . '.mp3',
+                'sound_url' => '/sounds/colors/' . strtolower($c['name']) . '.mp3',
             ]);
         }
     }

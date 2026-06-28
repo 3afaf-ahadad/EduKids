@@ -114,18 +114,18 @@ export default function Numbers() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FEFEFE] via-[#F0F8FF] to-[#E8F0F8] font-['Nunito',sans-serif] p-6">
-      <div className="relative container mx-auto max-w-md">
-        <div className="flex justify-between items-center mb-8">
+      <div className="relative container mx-auto max-w-5xl">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
           <button
             onClick={() => navigate(`/enfant/${childId}`)}
-            className="bg-white text-[#00639C] font-semibold px-4 py-2 rounded-full shadow-md border"
+            className="bg-white text-[#00639C] font-semibold px-5 py-2.5 rounded-full shadow-md border hover:bg-gray-50 transition"
           >
             ← Retour
           </button>
           <div className="flex flex-col items-start">
             <Logo size="text-4xl" />
           </div>
-          <h1 className="text-3xl font-extrabold text-[#6844C8]">Nombres</h1>
+          <h1 className="text-3xl font-extrabold text-[#00639C]">Alphabet</h1>
         </div>
 
         <div className="bg-white rounded-3xl p-8 shadow-xl border border-[#E0E2E9] text-center">

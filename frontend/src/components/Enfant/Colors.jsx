@@ -27,7 +27,7 @@ export default function Colors() {
   const [justCompleted, setJustCompleted] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
 
-  useEffect(() => {
+    useEffect(() => {
     let cancelled = false;
 
     getColors().then((res) => {
