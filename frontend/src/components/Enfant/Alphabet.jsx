@@ -7,7 +7,7 @@ import Logo from "../Common/Logo";
 import { useFadeTransition } from "../../hooks/useFadeTransition";
 
 const letterEmojis = {
-  A: "🍎",
+  A: "🛫",
   B: "⚽",
   C: "🐱",
   D: "🐬",
