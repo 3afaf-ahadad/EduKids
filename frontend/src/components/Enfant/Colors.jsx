@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getColors, saveProgress } from "../../services/api";
 import api from "../../services/api";
 import Logo from "../Common/Logo";
-
+import { useFadeTransition } from "../../hooks/useFadeTransition";
 const colorEmojis = {
   Rouge: "🍎",
   Bleu: "🌊",
@@ -26,6 +26,7 @@ export default function Colors() {
   const [attempts, setAttempts] = useState({});
   const [justCompleted, setJustCompleted] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
+  const { exiting, navigateWithFade } = useFadeTransition();
 
     useEffect(() => {
     let cancelled = false;
@@ -96,7 +97,7 @@ export default function Colors() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FEFEFE] via-[#F0F8FF] to-[#E8F0F8] font-['Nunito',sans-serif] p-6">
+    <div className="min-h-screen page-fade-in bg-gradient-to-br from-[#FEFEFE] via-[#F0F8FF] to-[#E8F0F8] font-['Nunito',sans-serif] p-6">
       <div className="relative container mx-auto max-w-4xl">
         <div className="flex justify-between items-center mb-8">
           <button

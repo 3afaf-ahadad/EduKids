@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getNumbers, saveProgress } from "../../services/api";
 import api from "../../services/api";
 import Logo from "../Common/Logo";
+import { useFadeTransition } from "../../hooks/useFadeTransition";
 
 const numberEmojis = {
   1: "⭐",
@@ -29,6 +30,7 @@ export default function Numbers() {
   const [attempts, setAttempts] = useState({});
   const [justCompleted, setJustCompleted] = useState(false);
   const [animating, setAnimating] = useState(false);
+  const { exiting, navigateWithFade } = useFadeTransition();
 
   useEffect(() => {
     let cancelled = false;
@@ -113,11 +115,11 @@ export default function Numbers() {
   const currentAttempts = attempts[current.id] || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FEFEFE] via-[#F0F8FF] to-[#E8F0F8] font-['Nunito',sans-serif] p-6">
+    <div className="min-h-screen page-fade-in page-transition ${exiting ? 'exiting' : ''}` bg-gradient-to-br from-[#FEFEFE] via-[#F0F8FF] to-[#E8F0F8] font-['Nunito',sans-serif] p-6">
       <div className="relative container mx-auto max-w-5xl">
         <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
           <button
-            onClick={() => navigate(`/enfant/${childId}`)}
+            onClick={() => navigateWithFade(`/enfant/${childId}`)}
             className="bg-white text-[#00639C] font-semibold px-5 py-2.5 rounded-full shadow-md border hover:bg-gray-50 transition"
           >
             ← Retour

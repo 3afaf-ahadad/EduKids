@@ -4,6 +4,7 @@ import { getAlphabet, saveProgress } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
 import Logo from "../Common/Logo";
+import { useFadeTransition } from "../../hooks/useFadeTransition";
 
 const letterEmojis = {
   A: "🍎",
@@ -44,6 +45,7 @@ export default function Alphabet() {
   const [attempts, setAttempts] = useState({});
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [justCompleted, setJustCompleted] = useState(null);
+  const { exiting, navigateWithFade } = useFadeTransition();
 
   useEffect(() => {
     let cancelled = false;
@@ -117,11 +119,11 @@ export default function Alphabet() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FEFEFE] via-[#F0F8FF] to-[#E8F0F8] font-['Nunito',sans-serif] p-6">
+    <div className="min-h-screen page-fade-in page-transition ${exiting ? 'exiting' : ''}` bg-gradient-to-br from-[#FEFEFE] via-[#F0F8FF] to-[#E8F0F8] font-['Nunito',sans-serif] p-6">
       <div className="relative container mx-auto max-w-5xl">
         <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
           <button
-            onClick={() => navigate(`/enfant/${childId}`)}
+            onClick={() => navigateWithFade(`/enfant/${childId}`)}
             className="bg-white text-[#00639C] font-semibold px-5 py-2.5 rounded-full shadow-md border hover:bg-gray-50 transition"
           >
             ← Retour

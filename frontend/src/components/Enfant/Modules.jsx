@@ -46,7 +46,7 @@ export default function Modules() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F0FDF4] via-[#E0F2FE] to-[#FDF4FF] font-['Nunito',sans-serif] p-6">
+    <div className="min-h-screen page-fade-in bg-gradient-to-br from-[#F0FDF4] via-[#E0F2FE] to-[#FDF4FF] font-['Nunito',sans-serif] p-6">
       <div className="container mx-auto max-w-4xl">
         <div className="flex justify-between items-start mb-8">
           <div className="flex flex-col items-start">
