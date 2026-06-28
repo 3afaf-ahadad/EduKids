@@ -1,47 +1,102 @@
-// src/components/Enfant/Numbers.jsx
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { mockNumbers, mockCompletedNumberIds } from '../../mockData';
+import { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useParams, useNavigate } from "react-router-dom";
+import { getNumbers, saveProgress } from "../../services/api";
+import api from "../../services/api";
+import Logo from "../Common/Logo";
+import { useFadeTransition } from "../../hooks/useFadeTransition";
+
+const numberEmojis = {
+  1: "⭐",
+  2: "⭐⭐",
+  3: "⭐⭐⭐",
+  4: "⭐⭐⭐⭐",
+  5: "⭐⭐⭐⭐⭐",
+  6: "⭐⭐⭐⭐⭐⭐",
+  7: "⭐⭐⭐⭐⭐⭐⭐",
+  8: "⭐⭐⭐⭐⭐⭐⭐⭐",
+  9: "⭐⭐⭐⭐⭐⭐⭐⭐⭐",
+  10: "⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐",
+};
 
 export default function Numbers() {
   const { childId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [numbers, setNumbers] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedIds, setCompletedIds] = useState({});
   const [attempts, setAttempts] = useState({});
   const [justCompleted, setJustCompleted] = useState(false);
+  const [animating, setAnimating] = useState(false);
+  const { exiting, navigateWithFade } = useFadeTransition();
 
   useEffect(() => {
-    setNumbers(mockNumbers);
-    setCompletedIds(mockCompletedNumberIds);
-    const initialAttempts = {};
-    Object.keys(mockCompletedNumberIds).forEach(id => {
-      initialAttempts[id] = 3;
+    let cancelled = false;
+
+    getNumbers().then((res) => {
+      if (cancelled) return;
+      setNumbers(res.data);
+      api
+        .get("/progress/number")
+        .then((progRes) => {
+          if (cancelled) return;
+          const savedAttempts = {};
+          const savedCompleted = {};
+          progRes.data.forEach((p) => {
+            savedAttempts[p.content_id] = p.attempts;
+            if (p.completed) savedCompleted[p.content_id] = true;
+          });
+          setAttempts(savedAttempts);
+          setCompletedIds(savedCompleted);
+        })
+        .catch(() => {});
     });
-    setAttempts(initialAttempts);
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const playSound = () => alert('🔊 Son du nombre (simulation)');
-
-  const saveProgress = (numberId) => {
-    if (completedIds[numberId]) return;
-    const newAttempts = { ...attempts };
-    newAttempts[numberId] = (newAttempts[numberId] || 0) + 1;
-    setAttempts(newAttempts);
-    if (newAttempts[numberId] >= 3) {
-      setCompletedIds(prev => ({ ...prev, [numberId]: true }));
-      setJustCompleted(true);
-      setTimeout(() => setJustCompleted(false), 1500);
-      alert('🎉 Félicitations ! Ce nombre est maintenant appris.');
+  // Animation trigger when current index changes
+  useEffect(() => {
+    if (numbers.length > 0) {
+      setAnimating(true);
+      const timer = setTimeout(() => setAnimating(false), 600);
+      return () => clearTimeout(timer);
     }
+  }, [currentIndex, numbers]);
+
+  const audioCache = {};
+
+  const playSound = (soundUrl) => {
+    if (!audioCache[soundUrl]) {
+      audioCache[soundUrl] = new Audio(soundUrl);
+    }
+    const audio = audioCache[soundUrl];
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
   };
 
+  // Called when "Écouter" is clicked – only this counts an attempt
   const handleListen = () => {
     const current = numbers[currentIndex];
-    if (current) {
-      playSound();
-      saveProgress(current.id);
+    if (!current) return;
+    playSound(current.sound_url);
+
+    if (completedIds[current.id]) return;
+
+    const newAttempts = { ...attempts };
+    newAttempts[current.id] = (newAttempts[current.id] || 0) + 1;
+    setAttempts(newAttempts);
+
+    saveProgress("number", current.id);
+
+    if (newAttempts[current.id] >= 3) {
+      setCompletedIds((prev) => ({ ...prev, [current.id]: true }));
+      setJustCompleted(true);
+      setTimeout(() => setJustCompleted(false), 1500);
     }
   };
 
@@ -49,36 +104,84 @@ export default function Numbers() {
     if (currentIndex + 1 < numbers.length) setCurrentIndex(currentIndex + 1);
   };
 
-  if (numbers.length === 0) return <div>Aucun nombre</div>;
+  const goToPrev = () => {
+    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
+  };
+
+  if (numbers.length === 0)
+    return <div className="text-center p-10">Chargement...</div>;
+
   const current = numbers[currentIndex];
-  const isCompleted = completedIds[current.id];
   const currentAttempts = attempts[current.id] || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FEFEFE] via-[#F0F8FF] to-[#E8F0F8] font-['Nunito',sans-serif] p-6">
-      <div className="relative container mx-auto max-w-md">
-        <div className="flex justify-between items-center mb-8">
-          <button onClick={() => navigate(`/enfant/${childId}`)} className="bg-white text-[#00639C] font-semibold px-4 py-2 rounded-full shadow-md border">← Accueil</button>
-          <h1 className="text-2xl font-bold text-[#00639C]">Les nombres</h1>
-          <div className="w-20" />
-        </div>
-        <div className="bg-white rounded-3xl shadow-xl p-8 text-center border">
-          <div className="text-8xl md:text-9xl font-black text-[#00639C] mb-4">{current.value}</div>
-          <div className="text-3xl mb-2">{current.image}</div>
-          <div className="text-3xl md:text-4xl font-semibold text-[#6844C8] mb-4">{current.word}</div>
-          {!isCompleted && (
-            <div className="text-md text-[#DB980F] mb-3">Écoutes : {currentAttempts}/3</div>
-          )}
-          {isCompleted && <div className="inline-block bg-green-100 text-green-700 px-4 py-1 rounded-full text-sm mb-6">✓ Appris !</div>}
-          {justCompleted && !isCompleted && <div className="inline-block bg-[#DB980F] text-white px-4 py-1 rounded-full text-sm mb-6 animate-pulse">🎉 Félicitations !</div>}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-4">
-            <button onClick={handleListen} className="bg-gradient-to-r from-[#4DABF7] to-[#9C7AFF] text-white font-bold px-8 py-3 rounded-full shadow-md">🔊 Écouter</button>
-            <button onClick={goToNext} disabled={currentIndex+1 >= numbers.length} className="bg-white border-2 border-[#00639C] text-[#00639C] font-bold px-8 py-3 rounded-full shadow-md">Suivant →</button>
+    <div className="min-h-screen page-fade-in page-transition ${exiting ? 'exiting' : ''}` bg-gradient-to-br from-[#FEFEFE] via-[#F0F8FF] to-[#E8F0F8] font-['Nunito',sans-serif] p-6">
+      <div className="relative container mx-auto max-w-5xl">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
+          <button
+            onClick={() => navigateWithFade(`/enfant/${childId}`)}
+            className="bg-white text-[#00639C] font-semibold px-5 py-2.5 rounded-full shadow-md border hover:bg-gray-50 transition"
+          >
+            ← Retour
+          </button>
+          <div className="flex flex-col items-start">
+            <Logo size="text-4xl" />
           </div>
-          <div className="flex justify-center gap-2 mt-8">
-            {numbers.map((_, idx) => (
-              <button key={idx} onClick={() => setCurrentIndex(idx)} className={`w-3 h-3 rounded-full transition ${idx === currentIndex ? 'bg-[#00639C] w-6' : 'bg-[#CEE5FF]'}`} />
-            ))}
+          <h1 className="text-3xl font-extrabold text-[#00639C]">Alphabet</h1>
+        </div>
+
+        <div className="bg-white rounded-3xl p-8 shadow-xl border border-[#E0E2E9] text-center">
+          <div
+            className={`text-8xl font-extrabold text-[#181C21] mb-4 ${animating ? "animate-bounce" : ""}`}
+          >
+            {current.value}
+          </div>
+          <div className="text-3xl text-gray-500 mb-4">{current.word}</div>
+          <div
+            className={`text-5xl mb-6 transition-all duration-300 max-w-full break-words ${animating ? "scale-110" : ""}`}
+          >
+            {numberEmojis[current.value]}
+          </div>
+
+          {/* Progress info */}
+          <div className="text-sm text-gray-500 mb-4">
+            {completedIds[current.id]
+              ? "✅ Nombre appris !"
+              : `Clics : ${currentAttempts} / 3`}
+          </div>
+
+          {justCompleted && (
+            <div className="text-yellow-500 text-2xl mb-4 animate-bounce">
+              🎉 Bravo !
+            </div>
+          )}
+
+          {/* The ONLY button that counts an attempt */}
+          <button
+            onClick={handleListen}
+            className="bg-gradient-to-r from-[#6844C8] to-[#9C7AFF] text-white font-bold px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition transform hover:scale-105 text-xl"
+          >
+            🔊 Écouter
+          </button>
+
+          <div className="flex justify-between mt-6">
+            <button
+              onClick={goToPrev}
+              disabled={currentIndex === 0}
+              className="bg-gray-200 text-gray-600 px-5 py-2 rounded-full disabled:opacity-50"
+            >
+              ← Précédent
+            </button>
+            <span className="text-gray-500">
+              {currentIndex + 1} / {numbers.length}
+            </span>
+            <button
+              onClick={goToNext}
+              disabled={currentIndex + 1 >= numbers.length}
+              className="bg-gray-200 text-gray-600 px-5 py-2 rounded-full disabled:opacity-50"
+            >
+              Suivant →
+            </button>
           </div>
         </div>
       </div>

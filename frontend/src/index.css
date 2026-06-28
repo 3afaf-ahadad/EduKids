@@ -1,12 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap');
 
-.font-kids {
-  font-family: 'Quicksand', 'Comic Neue', system-ui, sans-serif;
+
+@font-face {
+  font-family: 'Fredoka One';
+  src: url('/fonts/FredokaOne-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
 }
-
+.font-kids {
+  font-family: 'Fredoka', 'Comic Neue', 'Comic Sans MS', cursive;
+}
 .btn-gradient {
   background: linear-gradient(105deg, #5B53FF 0%, #9B6DFF 100%);
   box-shadow: 0 8px 18px -6px rgba(91, 83, 255, 0.3);
@@ -14,4 +19,64 @@
 .btn-gradient:hover {
   transform: scale(1.02);
   box-shadow: 0 12px 22px -10px rgba(91, 83, 255, 0.4);
+}
+
+/* ── Page fade‑in (for all child pages) ── */
+@keyframes page-fade-in {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.page-fade-in {
+  animation: page-fade-in 0.5s ease-out both;
+}
+
+/* ── Page exit (fade out) ── */
+@keyframes page-fade-out {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(10px); }
+}
+.page-fade-out {
+  animation: page-fade-out 0.35s ease-in both;
+}
+
+/* Transition container – holds both animations */
+.page-transition {
+  animation: page-fade-in 0.5s ease-out both;
+}
+.page-transition.exiting {
+  animation: page-fade-out 0.35s ease-in both;
+}
+
+/* ── Floating background emojis (pure CSS, no JS) ── */
+.floating-emoji {
+  position: fixed;
+  top: -60px;
+  font-size: 2.5rem;
+  pointer-events: none;
+  z-index: 0;
+  animation: float-down var(--duration) linear infinite;
+  opacity: 0.15;
+}
+@keyframes float-down {
+  0%   { transform: translateY(-60px) rotate(0deg); opacity: 0.3; }
+  100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
+}
+
+/* ── Confetti burst (when a letter/colour/number is learned) ── */
+@keyframes confetti-burst {
+  0%   { transform: scale(0) rotate(0deg); opacity: 1; }
+  50%  { opacity: 1; }
+  100% { transform: scale(1.8) rotate(20deg); opacity: 0; }
+}
+.confetti-burst {
+  animation: confetti-burst 0.8s ease-out both;
+}
+
+/* ── Button bounce on hover ── */
+.btn-bounce:hover {
+  animation: bounce-once 0.4s ease;
+}
+@keyframes bounce-once {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
 }

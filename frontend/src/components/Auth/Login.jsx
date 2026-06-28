@@ -1,4 +1,4 @@
-// src/components/Auth/Login.jsx
+import Logo from "../Common/Logo";
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
@@ -15,7 +15,7 @@ export default function Login() {
     setError("");
     try {
       await login(email, password);
-      navigate("/dashboard");
+      navigate("/");
     } catch {
       setError("Email ou mot de passe incorrect");
     }
@@ -23,32 +23,16 @@ export default function Login() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#F7F9FF] font-['Nunito',sans-serif] flex items-center justify-center p-6">
-      {/* Bulles décoratives floutées (exactement comme sur la maquette) */}
+      {/* Bulles décoratives floutées */}
       <div className="absolute left-[-5%] right-[65%] top-[-10%] bottom-[60%] bg-[#CEE5FF] mix-blend-multiply opacity-40 blur-[32px] rounded-full" />
       <div className="absolute left-[55%] right-[-5%] top-[47.5%] bottom-[-10%] bg-[#E8DDFF] mix-blend-multiply opacity-40 blur-[32px] rounded-full" />
       <div className="absolute left-[65%] right-[10%] top-[20%] bottom-[48.75%] bg-[#FFDDAF] mix-blend-multiply opacity-30 blur-[32px] rounded-full" />
 
       {/* Carte de connexion - dimensions et style exacts */}
       <div className="relative z-10 bg-white border border-[#E0E2E9] rounded-[48px] shadow-[0px_10px_30px_rgba(0,99,156,0.15)] w-full max-w-[512px] p-12">
-        {/* Bloc Logo / Brand Header */}
         <div className="flex flex-col items-center pb-10">
-          <div className="bg-[#4DABF7] rounded-full p-5 shadow-md mb-4">
-            <svg
-              className="w-12 h-12 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-[#00639C]">EduKids</h1>
-          <p className="text-[#404751] text-center mt-2">
+          <Logo size="text-6xl" />
+          <p className="text-[#404751] text-center mt-4">
             Reviens jouer et apprendre avec nous !
           </p>
         </div>
@@ -65,7 +49,8 @@ export default function Login() {
           {/* Champ Email */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 pl-4">
-              <div className="w-4 h-4 bg-[#00639C] rounded-sm" /> {/* Icône simplifiée */}
+              <div className="w-4 h-4 bg-[#00639C] rounded-sm" />{" "}
+              {/* Icône simplifiée */}
               <span className="text-[#181C21] font-medium">Adresse Email</span>
             </div>
             <input
@@ -81,7 +66,8 @@ export default function Login() {
           {/* Champ Mot de passe */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 pl-4">
-              <div className="w-4 h-5 bg-[#6844C8] rounded-sm" /> {/* Icône simplifiée */}
+              <div className="w-4 h-5 bg-[#6844C8] rounded-sm" />{" "}
+              {/* Icône simplifiée */}
               <span className="text-[#181C21] font-medium">Mot de passe</span>
             </div>
             <input
@@ -103,14 +89,6 @@ export default function Login() {
             >
               <span className="text-lg">Se connecter</span>
             </button>
-
-            {/* Lien Mot de passe oublié */}
-            <Link
-              to="/forgot-password"
-              className="text-[#00639C] hover:underline text-center"
-            >
-              Mot de passe oublié ?
-            </Link>
           </div>
         </form>
 

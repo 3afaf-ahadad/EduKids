@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import { login as apiLogin, logout as apiLogout, getMe } from '../services/api';
+import api from '../services/api'; // ← add this
 
 const AuthContext = createContext();
 
@@ -9,25 +10,30 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const response = await api.get('/user');
+      const response = await getMe();
       setUser(response.data);
-    } catch (error) {
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email, password) => {
-    await api.post('/login', { email, password });
-    await fetchUser();
-  };
+const login = async (email, password) => {
+  const response = await apiLogin({ email, password });
+  const { user, token } = response.data;
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  localStorage.setItem('auth_token', token);
+  setUser(user);
+};
 
-  const logout = async () => {
-    await api.post('/logout');
-    setUser(null);
-  };
-
+ const logout = async () => {
+  await apiLogout();
+  delete api.defaults.headers.common['Authorization'];
+  localStorage.removeItem('auth_token');
+  setUser(null);
+  setLoading(false);
+};
   useEffect(() => {
     fetchUser();
   }, []);
